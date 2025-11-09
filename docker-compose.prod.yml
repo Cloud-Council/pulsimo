@@ -106,7 +106,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrations:
+      db-migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -138,7 +138,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrations:
+      db-migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -173,7 +173,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrations:
+      db-migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -207,7 +207,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrations:
+      db-migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -240,7 +240,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrations:
+      db-migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -273,7 +273,7 @@ services:
     ports:
       - "${EXPOSE_FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - api-gateway
+      - pulsimo-api-gateway
     deploy:
       resources:
         limits:
