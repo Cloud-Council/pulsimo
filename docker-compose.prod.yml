@@ -89,7 +89,7 @@ services:
   # ============================================================================
   # BACKEND - API Gateway
   # ============================================================================
-  pulsimo-api-gateway:
+  api-gateway:
     image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.0.1
     container_name: pulsimo-api-gateway
     environment:
@@ -123,7 +123,7 @@ services:
   # ============================================================================
   # BACKEND - Health Checker Service
   # ============================================================================
-  pulsimo-checker:
+  checker:
     image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.1
     container_name: pulsimo-checker
     environment:
@@ -155,7 +155,7 @@ services:
   # ============================================================================
   # BACKEND - Notification Service
   # ============================================================================
-  pulsimo-notification:
+  notification:
     image: pulsimo/pulsimo_be_notifications:rc1beta-v0.0.1
     container_name: pulsimo-notification
     environment:
@@ -190,7 +190,7 @@ services:
   # ============================================================================
   # BACKEND - Dependency Tracker Service
   # ============================================================================
-  pulsimo-dependency-tracker:
+  dependency-tracker:
     image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.1
     container_name: pulsimo-dependency-tracker
     environment:
@@ -224,7 +224,7 @@ services:
   # ============================================================================
   # BACKEND - Maintenance Scheduler Service
   # ============================================================================
-  pulsimo-maintenance-scheduler:
+  maintenance-scheduler:
     image: pulsimo/pulsimo_be_maintenance_scheduler:rc1beta-v0.0.1
     container_name: pulsimo-maintenance
     environment:
@@ -257,7 +257,7 @@ services:
   # ============================================================================
   # FRONTEND - Next.js Application
   # ============================================================================
-  pulsimo-frontend:
+  frontend:
     image: pulsimo/pulsimo_frontend:rc1beta-v0.0.1
     container_name: pulsimo-frontend
     environment:
@@ -273,7 +273,7 @@ services:
     ports:
       - "${EXPOSE_FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - pulsimo-api-gateway
+      - api-gateway
     deploy:
       resources:
         limits:
