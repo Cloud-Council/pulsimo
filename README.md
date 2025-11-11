@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="release-docs-beta/cover.png" alt="Cover Image" />
+</p>
+
 # Pulsimo - Modern On-Premise Service Monitoring Platform
 
 ![Version](https://img.shields.io/badge/version-1.0.0--beta-blue)

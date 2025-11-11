@@ -90,7 +90,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.0.2
+    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.0.3
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -258,7 +258,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:rc1beta-v0.0.2
+    image: pulsimo/pulsimo_frontend:rc1beta-v0.0.3
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
