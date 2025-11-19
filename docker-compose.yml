@@ -90,7 +90,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.0
+    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.1
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -130,7 +130,7 @@ services:
   # BACKEND - Health Checker Service
   # ============================================================================
   checker:
-    image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.4
+    image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.5
     container_name: pulsimo-checker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -138,6 +138,7 @@ services:
       CHECK_INTERVAL_SECONDS: ${CHECK_INTERVAL_SECONDS:-30}
       MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-100}
       CHECK_TIMEOUT_SECONDS: ${CHECK_TIMEOUT_SECONDS:-30}
+      HEALTH_PORT: ${CHECKER_HEALTH_PORT:-8081}
       RUST_LOG: ${CHECKER_LOG_LEVEL:-info}
       TZ: UTC
     depends_on:
@@ -163,10 +164,11 @@ services:
   # BACKEND - Notification Service
   # ============================================================================
   notification:
-    image: pulsimo/pulsimo_be_notifications:rc1beta-v0.0.1
+    image: pulsimo/pulsimo_be_notifications:rc1beta-v0.0.2
     container_name: pulsimo-notification
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
+      HEALTH_PORT: ${NOTIFICATION_HEALTH_PORT:-8082}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
