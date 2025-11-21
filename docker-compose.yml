@@ -90,7 +90,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.1
+    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.2
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
