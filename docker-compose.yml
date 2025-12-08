@@ -267,7 +267,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:rc1beta-v0.1.3
+    image: pulsimo/pulsimo_frontend:rc1beta-v0.1.4
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
