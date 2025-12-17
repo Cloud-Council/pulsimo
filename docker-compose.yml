@@ -75,7 +75,7 @@ services:
   # DATABASE MIGRATIONS - Runs Once on Deployment
   # ============================================================================
   db-migrations:
-    image: pulsimo/pulsimo_migrations:rc1beta-v0.1.1
+    image: pulsimo/pulsimo_migrations:rc1beta-v0.1.2
     container_name: pulsimo-db-migrations
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitoring}:${POSTGRES_PASSWORD:-monitoring_password}@postgres:5432/${POSTGRES_DB:-monitoring_system}
@@ -200,7 +200,7 @@ services:
   # BACKEND - Dependency Tracker Service
   # ============================================================================
   dependency-tracker:
-    image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.5
+    image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.6
     container_name: pulsimo-dependency-tracker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
