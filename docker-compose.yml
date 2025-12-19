@@ -90,7 +90,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.5
+    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.6
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -130,7 +130,7 @@ services:
   # BACKEND - Health Checker Service
   # ============================================================================
   checker:
-    image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.8
+    image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.9
     container_name: pulsimo-checker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -267,7 +267,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:rc1beta-v0.1.8
+    image: pulsimo/pulsimo_frontend:rc1beta-v0.1.9
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
