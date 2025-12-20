@@ -200,7 +200,7 @@ services:
   # BACKEND - Dependency Tracker Service
   # ============================================================================
   dependency-tracker:
-    image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.8
+    image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.9
     container_name: pulsimo-dependency-tracker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
