@@ -74,8 +74,8 @@ You need a Linux server with Docker 20.10+ and Docker Compose v2, 4 vCPU and 8 G
 ```bash
 git clone https://github.com/Cloud-Council/pulsimo.git
 cd pulsimo
-chmod +x setup-prod.sh
-./setup-prod.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
 The script detects the server's address, writes `.env` with a generated database password
@@ -87,8 +87,8 @@ Prefer to do it by hand?
 ```bash
 cp .env.example .env
 # set HOST_IP, POSTGRES_PASSWORD, JWT_SECRET and METRICS_SECRET_KEY in .env
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml pull
+docker compose -f docker-compose.yml up -d
 ```
 
 Then open `http://<HOST_IP>:3000`, click **Register** and create your organization. The
