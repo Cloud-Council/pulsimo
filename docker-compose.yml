@@ -6,8 +6,14 @@
 #
 # Usage:
 #   1. Copy .env.example to .env
-#   2. Configure HOST_IP and other settings in .env
+#   2. Configure HOST_IP, passwords, JWT_SECRET and METRICS_SECRET_KEY in .env
 #   3. Run: docker compose -f docker-compose.prod.yml up -d
+#
+# Image tags: each Pulsimo image has its own default tag below (the release that
+# was built for it). To change one, set its variable in .env, e.g.
+# API_GATEWAY_VERSION=rc1beta-v0.1.8. PULSIMO_VERSION, when set, puts every image
+# on that one tag (what ./build-and-push.sh <version> produces); leave it unset
+# to use the per-image tags.
 #
 # System Requirements: 4 vCPU, 8GB RAM minimum
 # ==============================================================================
@@ -72,13 +78,18 @@ services:
       - pulsimo-network
 
   # ============================================================================
-  # DATABASE MIGRATIONS - Runs Once on Deployment
+  # DATABASE MIGRATIONS - runs on every deploy, applies only new files, then exits
   # ============================================================================
-  db-migrations:
-    image: pulsimo/pulsimo_migrations:rc1beta-v0.1.4
-    container_name: pulsimo-db-migrations
+  # The image contains backend/migrations/*.sql plus run-migrations.sh, which
+  # records applied files in schema_migrations. New migrations ship inside the
+  # image, so release them with ./build-and-push.sh <version> and set
+  # PULSIMO_VERSION to that version.
+  migrations:
+    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.5}}
+    container_name: pulsimo-migrations
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitoring}:${POSTGRES_PASSWORD:-monitoring_password}@postgres:5432/${POSTGRES_DB:-monitoring_system}
+      MIGRATIONS_FORCE_RERUN: ${MIGRATIONS_FORCE_RERUN:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,29 +101,63 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.6
+    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.7}}
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
       PORT: ${API_PORT:-8080}
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      RUST_LOG: ${API_LOG_LEVEL:-info}
+      # Internal service URLs (container-to-container, never HOST_IP)
       CHECKER_SERVICE_URL: ${CHECKER_SERVICE_URL:-http://checker:8081}
       NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification:8082}
       DEPENDENCY_TRACKER_SERVICE_URL: ${DEPENDENCY_TRACKER_SERVICE_URL:-http://dependency-tracker:8083}
       MAINTENANCE_SERVICE_URL: ${MAINTENANCE_SERVICE_URL:-http://maintenance-scheduler:3007}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      RUST_LOG: ${API_LOG_LEVEL:-info}
+      # Metrics platform
+      METRICS_COLLECTOR_URL: ${METRICS_COLLECTOR_URL:-http://metrics-collector:8084}
+      METRICS_STORE_URL: ${METRICS_STORE_URL:-http://victoriametrics:8428}
+      LOGS_URL: ${LOGS_URL:-http://victorialogs:9428}
+      LOGS_RETENTION: ${LOGS_RETENTION:-7d}
+      # Address Fluent Bit uses to reach Pulsimo (shown in the generated config); empty = this page's API address
+      LOG_INGEST_PUBLIC_URL: ${LOG_INGEST_PUBLIC_URL:-}
+      LOG_INGEST_MAX_LINES_PER_SEC: ${LOG_INGEST_MAX_LINES_PER_SEC:-2000}
+      LOG_INGEST_MAX_LINE_BYTES: ${LOG_INGEST_MAX_LINE_BYTES:-16384}
+      LOG_AGENT_IMAGE: ${LOG_AGENT_IMAGE:-fluent/fluent-bit:3.1}
+      # System Health: what is probed and how (see docs/user-guide/17-system-health.md)
+      VMALERT_URL: ${VMALERT_URL:-http://vmalert:8880}
+      FRONTEND_INTERNAL_URL: ${FRONTEND_INTERNAL_URL:-http://frontend:3000}
+      SYSTEM_HEALTH_PROBE_SECONDS: ${SYSTEM_HEALTH_PROBE_SECONDS:-30}
+      SYSTEM_HEALTH_TIMEOUT_SECONDS: ${SYSTEM_HEALTH_TIMEOUT_SECONDS:-5}
+      SYSTEM_HEALTH_SLOW_MS: ${SYSTEM_HEALTH_SLOW_MS:-1000}
+      SYSTEM_HEALTH_SKIP: ${SYSTEM_HEALTH_SKIP:-}
+      # Shown on System Health (the services that use them have the same values)
+      MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-300}
+      HEALTH_RETENTION_DAYS: ${HEALTH_RETENTION_DAYS:-90}
+      EVENT_TRAIL_RETENTION_DAYS: ${EVENT_TRAIL_RETENTION_DAYS:-180}
+      INCIDENT_REOPEN_MINUTES: ${INCIDENT_REOPEN_MINUTES:-10}
+      LOG_INCIDENT_WARNING_COUNT: ${LOG_INCIDENT_WARNING_COUNT:-5}
+      LOG_INCIDENT_CRITICAL_COUNT: ${LOG_INCIDENT_CRITICAL_COUNT:-15}
+      LOG_INCIDENT_WINDOW_SECONDS: ${LOG_INCIDENT_WINDOW_SECONDS:-300}
+      LOG_INCIDENT_SUSTAIN_SECONDS: ${LOG_INCIDENT_SUSTAIN_SECONDS:-60}
+      LOG_INCIDENT_RESOLVE_QUIET_SECONDS: ${LOG_INCIDENT_RESOLVE_QUIET_SECONDS:-600}
+      LOG_INCIDENT_BASELINE_FACTOR: ${LOG_INCIDENT_BASELINE_FACTOR:-3}
+      LOG_INCIDENT_CRITICAL_AFTER_SECONDS: ${LOG_INCIDENT_CRITICAL_AFTER_SECONDS:-900}
+      LOG_INCIDENT_EVAL_SECONDS: ${LOG_INCIDENT_EVAL_SECONDS:-30}
+      METRICS_RETENTION: ${METRICS_RETENTION:-30d}
+      DIGEST_INTERVAL_MINUTES: ${DIGEST_INTERVAL_MINUTES:-60}
+      METRICS_SECRET_KEY: ${METRICS_SECRET_KEY:?Set METRICS_SECRET_KEY in .env (openssl rand -base64 32)}
+      # Prefix of the container names below, shown in System Health's "docker logs" hints
+      CONTAINER_NAME_PREFIX: pulsimo-
     ports:
       - "${EXPOSE_API_PORT:-8080}:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      db-migrations:
+      migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -130,23 +175,24 @@ services:
   # BACKEND - Health Checker Service
   # ============================================================================
   checker:
-    image: pulsimo/pulsimo_be_checker:rc1beta-v0.0.9
+    image: pulsimo/pulsimo_be_checker:${CHECKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.0}}
     container_name: pulsimo-checker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
-      CHECK_INTERVAL_SECONDS: ${CHECK_INTERVAL_SECONDS:-30}
-      MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-100}
-      CHECK_TIMEOUT_SECONDS: ${CHECK_TIMEOUT_SECONDS:-30}
+      METRICS_STORE_URL: ${METRICS_STORE_URL:-http://victoriametrics:8428}
+      # A failure this soon after recovery reopens the last incident instead of opening a new one
+      INCIDENT_REOPEN_MINUTES: ${INCIDENT_REOPEN_MINUTES:-10}
+      MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-300}  # checks running at the same time; a slow endpoint holds one slot, never the others
       HEALTH_PORT: ${CHECKER_HEALTH_PORT:-8081}
       RUST_LOG: ${CHECKER_LOG_LEVEL:-info}
-      TZ: UTC
+      TZ: UTC  # match the database
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      db-migrations:
+      migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -164,11 +210,10 @@ services:
   # BACKEND - Notification Service
   # ============================================================================
   notification:
-    image: pulsimo/pulsimo_be_notifications:rc1beta-v0.0.2
+    image: pulsimo/pulsimo_be_notifications:${NOTIFICATION_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
     container_name: pulsimo-notification
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
-      HEALTH_PORT: ${NOTIFICATION_HEALTH_PORT:-8082}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
@@ -176,13 +221,20 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       FROM_EMAIL: ${FROM_EMAIL:-noreply@monitoring.example.com}
       FROM_NAME: ${FROM_NAME:-Pulsimo Monitoring}
+      METRICS_STORE_URL: ${METRICS_STORE_URL:-http://victoriametrics:8428}
+      # Low-urgency findings from the metrics are sent as one digest this often
+      DIGEST_INTERVAL_MINUTES: ${DIGEST_INTERVAL_MINUTES:-60}
+      # Address people open Pulsimo at, for "Open in Pulsimo" links in alerts
+      PULSIMO_PUBLIC_URL: ${PULSIMO_PUBLIC_URL:-http://${HOST_IP:-localhost}:${EXPOSE_FRONTEND_PORT:-3000}}
+      LOGS_URL: ${LOGS_URL:-http://victorialogs:9428}
+      HEALTH_PORT: ${NOTIFICATION_HEALTH_PORT:-8082}
       RUST_LOG: ${NOTIFICATION_LOG_LEVEL:-info}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      db-migrations:
+      migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -200,14 +252,12 @@ services:
   # BACKEND - Dependency Tracker Service
   # ============================================================================
   dependency-tracker:
-    image: pulsimo/pulsimo_be_dependency_tracer:rc1beta-v0.0.9
+    image: pulsimo/pulsimo_be_dependency_tracer:${DEPENDENCY_TRACKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.0}}
     container_name: pulsimo-dependency-tracker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       PORT: ${DEPENDENCY_TRACKER_PORT:-8083}
-      DISCOVERY_INTERVAL_SECONDS: ${DISCOVERY_INTERVAL_SECONDS:-300}
-      IMPACT_CALCULATION_INTERVAL_SECONDS: ${IMPACT_CALCULATION_INTERVAL_SECONDS:-600}
       RUST_LOG: ${DEPENDENCY_LOG_LEVEL:-info}
     expose:
       - "${DEPENDENCY_TRACKER_PORT:-8083}"
@@ -216,7 +266,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      db-migrations:
+      migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -234,7 +284,7 @@ services:
   # BACKEND - Maintenance Scheduler Service
   # ============================================================================
   maintenance-scheduler:
-    image: pulsimo/pulsimo_be_maintenance_scheduler:rc1beta-v0.0.2
+    image: pulsimo/pulsimo_be_maintenance_scheduler:${MAINTENANCE_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
     container_name: pulsimo-maintenance
     environment:
       DB_HOST: postgres
@@ -244,12 +294,26 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-monitoring_password}
       TZ: ${TZ:-UTC}
       PORT: ${MAINTENANCE_PORT:-3007}
+      HEALTH_RETENTION_DAYS: ${HEALTH_RETENTION_DAYS:-90}
+      HEALTH_RETENTION_MODERATE_DAYS: ${HEALTH_RETENTION_MODERATE_DAYS:-60}
+      HEALTH_RETENTION_AGGRESSIVE_DAYS: ${HEALTH_RETENTION_AGGRESSIVE_DAYS:-30}
+      DB_SIZE_WARN_MB: ${DB_SIZE_WARN_MB:-1000}
+      DB_SIZE_CRITICAL_MB: ${DB_SIZE_CRITICAL_MB:-2000}
+      EVENT_TRAIL_RETENTION_DAYS: ${EVENT_TRAIL_RETENTION_DAYS:-180}
+      ALERT_HISTORY_RETENTION_DAYS: ${ALERT_HISTORY_RETENTION_DAYS:-30}
+      INCIDENT_RETENTION_DAYS: ${INCIDENT_RETENTION_DAYS:-90}
+      NOTIFICATION_RETENTION_DAYS: ${NOTIFICATION_RETENTION_DAYS:-60}
+      ALARM_RETENTION_DAYS: ${ALARM_RETENTION_DAYS:-90}
+      API_METRICS_RETENTION_DAYS: ${API_METRICS_RETENTION_DAYS:-30}
+      CLEANUP_CRON: ${CLEANUP_CRON:-0 2 * * *}
+      AGGREGATION_CRON: ${AGGREGATION_CRON:-5 * * * *}
+      DEEP_CLEANUP_CRON: ${DEEP_CLEANUP_CRON:-0 3 * * 0}
     expose:
       - "${MAINTENANCE_PORT:-3007}"
     depends_on:
       postgres:
         condition: service_healthy
-      db-migrations:
+      migrations:
         condition: service_completed_successfully
     deploy:
       resources:
@@ -264,20 +328,176 @@ services:
       - pulsimo-network
 
   # ============================================================================
+  # METRICS STORE - VictoriaMetrics (internal only, never published on the host)
+  # ============================================================================
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.106.1
+    container_name: pulsimo-victoriametrics
+    # METRICS_RETENTION = days of history to keep (e.g. 30d, 60d, 90d). Maximum 90d.
+    # VictoriaMetrics reads it only at startup: change it in .env, then
+    # `docker compose up -d victoriametrics`. Raising it keeps existing data;
+    # lowering it deletes data older than the new period.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        days=$$(echo "$${METRICS_RETENTION:-30d}" | tr -d 'dD ')
+        case "$$days" in
+          ''|*[!0-9]*) echo "METRICS_RETENTION must be a number of days like 30d (got '$${METRICS_RETENTION}')"; exit 1 ;;
+        esac
+        if [ "$$days" -gt 90 ]; then echo "METRICS_RETENTION=$${METRICS_RETENTION} is above the 90-day maximum, using 90d"; days=90; fi
+        if [ "$$days" -lt 1 ]; then days=1; fi
+        echo "Keeping metrics for $$days days"
+        exec /victoria-metrics-prod -storageDataPath=/storage -retentionPeriod=$${days}d -httpListenAddr=:8428
+    environment:
+      METRICS_RETENTION: ${METRICS_RETENTION:-30d}
+    volumes:
+      - vm_data:/storage
+    expose:
+      - "8428"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    networks:
+      - pulsimo-network
+
+  # Log store for application logs (internal only). LOGS_RETENTION = how long
+  # lines are kept (e.g. 7d, 14d, 30d); read at startup.
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.51.1
+    container_name: pulsimo-victorialogs
+    command:
+      - -storageDataPath=/storage
+      - -retentionPeriod=${LOGS_RETENTION:-7d}
+      - -httpListenAddr=:9428
+    volumes:
+      - vl_data:/storage
+    expose:
+      - "9428"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - pulsimo-network
+
+  # Evaluates the recording rules the metrics collector generates (per-route
+  # request rates and latency buckets) and writes the results back to the store
+  vmalert:
+    image: victoriametrics/vmalert:v1.106.1
+    container_name: pulsimo-vmalert
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        [ -f /rules/pulsimo.yml ] || printf 'groups:\n  - name: pulsimo-http\n    rules:\n      - record: pulsimo:rules_loaded\n        expr: vector(1)\n' > /rules/pulsimo.yml
+        exec /vmalert-prod -datasource.url=http://victoriametrics:8428 -remoteWrite.url=http://victoriametrics:8428 -rule=/rules/*.yml -evaluationInterval=30s -httpListenAddr=:8880
+    volumes:
+      - vm_rules:/rules
+    expose:
+      - "8880"
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+    networks:
+      - pulsimo-network
+
+  # ============================================================================
+  # BACKEND - Metrics Collector (pulls metrics from configured sources)
+  # ============================================================================
+  metrics-collector:
+    image: pulsimo/pulsimo_be_metrics_collector:${METRICS_COLLECTOR_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.1}}
+    container_name: pulsimo-metrics-collector
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      VM_URL: ${METRICS_STORE_URL:-http://victoriametrics:8428}
+      LOGS_URL: ${LOGS_URL:-http://victorialogs:9428}
+      LOG_PATTERN_INTERVAL_SECONDS: ${LOG_PATTERN_INTERVAL_SECONDS:-60}
+      ALARM_EVAL_SECONDS: ${ALARM_EVAL_SECONDS:-30}
+      LOG_PATTERN_MAX_LINES: ${LOG_PATTERN_MAX_LINES:-5000}
+      DEPENDENCY_SCAN_MINUTES: ${DEPENDENCY_SCAN_MINUTES:-30}
+      DISCOVERY_INTERVAL_SECONDS: ${DISCOVERY_INTERVAL_SECONDS:-300}
+      TARGET_RELOAD_INTERVAL_SECONDS: ${TARGET_RELOAD_INTERVAL_SECONDS:-30}
+      LOG_INCIDENTS_ENABLED: ${LOG_INCIDENTS_ENABLED:-true}
+      LOG_INCIDENT_LAG_SECONDS: ${LOG_INCIDENT_LAG_SECONDS:-20}
+      INCIDENT_REOPEN_MINUTES: ${INCIDENT_REOPEN_MINUTES:-10}
+      LOG_INCIDENT_WARNING_COUNT: ${LOG_INCIDENT_WARNING_COUNT:-5}
+      LOG_INCIDENT_CRITICAL_COUNT: ${LOG_INCIDENT_CRITICAL_COUNT:-15}
+      LOG_INCIDENT_WINDOW_SECONDS: ${LOG_INCIDENT_WINDOW_SECONDS:-300}
+      LOG_INCIDENT_SUSTAIN_SECONDS: ${LOG_INCIDENT_SUSTAIN_SECONDS:-60}
+      LOG_INCIDENT_RESOLVE_QUIET_SECONDS: ${LOG_INCIDENT_RESOLVE_QUIET_SECONDS:-600}
+      LOG_INCIDENT_BASELINE_FACTOR: ${LOG_INCIDENT_BASELINE_FACTOR:-3}
+      LOG_INCIDENT_CRITICAL_AFTER_SECONDS: ${LOG_INCIDENT_CRITICAL_AFTER_SECONDS:-900}
+      LOG_INCIDENT_EVAL_SECONDS: ${LOG_INCIDENT_EVAL_SECONDS:-30}
+      RULES_DIR: /rules
+      VMALERT_URL: http://vmalert:8880
+      METRICS_SECRET_KEY: ${METRICS_SECRET_KEY:?Set METRICS_SECRET_KEY in .env (openssl rand -base64 32)}
+      MAX_CONCURRENT_SCRAPES: ${MAX_CONCURRENT_SCRAPES:-200}
+      MAX_SCRAPE_BODY_MB: ${MAX_SCRAPE_BODY_MB:-20}
+      HEALTH_PORT: 8084
+      RUST_LOG: ${METRICS_LOG_LEVEL:-info}
+    volumes:
+      - vm_rules:/rules
+    expose:
+      - "8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      victoriametrics:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    restart: unless-stopped
+    networks:
+      - pulsimo-network
+
+  # ============================================================================
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:rc1beta-v0.1.9
+    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.0}}
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
-      # Option 1: Use explicit URLs (takes priority)
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
-      # Option 2: Auto-construct from HOST_IP (fallback)
+      # Explicit URLs win; otherwise they are built from HOST_IP and API_PORT
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
       HOST_IP: ${HOST_IP:-localhost}
       API_PORT: ${EXPOSE_API_PORT:-8080}
-      # Application version (optional)
+      # Version text shown in the web app
       APP_VERSION: ${APP_VERSION:-v1beta1}
     ports:
       - "${EXPOSE_FRONTEND_PORT:-3000}:3000"
@@ -303,6 +523,12 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  vm_data:
+    driver: local
+  vm_rules:
+    driver: local
+  vl_data:
+    driver: local
 
 # ==============================================================================
 # NETWORKS - Service Communication
@@ -312,7 +538,7 @@ networks:
     driver: bridge
 
 # ==============================================================================
-# RESOURCE ALLOCATION SUMMARY (for 4 vCPU, 8GB RAM system)
+# RESOURCE ALLOCATION SUMMARY (recommended host: 4 vCPU, 8GB RAM; limits may overlap)
 # ==============================================================================
 # Service               CPU Limit   CPU Reserve   Memory Limit   Memory Reserve
 # ------------------------------------------------------------------------------
@@ -323,8 +549,12 @@ networks:
 # Notification          0.25        0.1           512MB          256MB
 # Dependency Tracker    0.25        0.1           512MB          256MB
 # Maintenance           0.25        0.1           256MB          128MB
+# VictoriaMetrics       0.5         0.25          1GB            256MB
+# VictoriaLogs          0.5         -             512MB          -
+# vmalert               0.25        -             128MB          -
+# Metrics Collector     0.5         0.1           512MB          128MB
 # Frontend              0.75        0.5           1.5GB          1GB
 # ------------------------------------------------------------------------------
-# TOTAL                 4.0 vCPU                  7.75GB
-# System Overhead       ~0-1 vCPU                 ~256MB
+# TOTAL RESERVED        2.5 vCPU                  4.8GB
+# Limits are ceilings; services rarely hit them at the same time.
 # ==============================================================================

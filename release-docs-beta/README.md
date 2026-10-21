@@ -1,285 +1,138 @@
-# Pulsimo - Modern On-Premise Service Monitoring Platform
+<p align="center">
+  <img src="cover.png" alt="Pulsimo" />
+</p>
 
-![Version](https://img.shields.io/badge/version-1.0.0--beta-blue)
-![Status](https://img.shields.io/badge/status-beta-yellow)
-![License](https://img.shields.io/badge/license-MIT-green)
+# Pulsimo documentation
 
----
+> Version v1-rc2beta · public beta · also on the [website](https://pulsimo.github.io/docs/)
 
-## 🚀 **What is Pulsimo?**
+Pulsimo is a self-hosted monitoring platform. It checks your websites, APIs, databases and
+other services, pulls their metrics and logs, opens incidents with the evidence attached,
+and tells the right people on Slack, Discord, Teams, Google Chat, email or a webhook.
 
-**Pulsimo** is a comprehensive, modern, on-premise service monitoring and incident management platform designed to provide real-time visibility into your infrastructure's health. Built with a focus on developer experience and operational excellence, Pulsimo offers an all-in-one solution for monitoring HTTP/HTTPS endpoints, databases, message queues, and custom services across your entire technology stack.
+<p align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/overview.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/overview.png"><img src="images/screenshots/dark/overview.png" alt="System overview" width="100%"></picture>
+</p>
 
-Unlike traditional monitoring solutions that require multiple tools and complex configurations, Pulsimo provides a unified, intuitive interface for monitoring, alerting, incident management, and dependency tracking—all deployable on your own infrastructure with complete data sovereignty.
+## Start here
 
-### **Key Capabilities**
+1. **[Installation](installation/README.md)**: run Pulsimo on one Linux server with Docker Compose.
+2. **[Quick start](getting-started.md)**: your first endpoint, alert channel and metric source.
+3. **[Your first project](first-project.md)**: group endpoints and set a reliability target.
 
-- **Real-Time Health Monitoring** - Continuous health checks across HTTP, TCP, Database, Kafka, Redis, Elasticsearch, and custom endpoints
-- **Intelligent Alerting** - Multi-channel notifications via Slack, Discord, Email, Microsoft Teams, Google Chat, and custom webhooks
-- **Incident Management** - Complete incident lifecycle management with acknowledgement, investigation, and post-mortem capabilities
-- **Dependency Mapping** - Automatic discovery and visualization of service dependencies with critical path analysis
-- **Performance Analytics** - In-depth performance metrics, SLA tracking, and trend analysis
-- **Role-Based Access Control** - Granular permissions system with admin, member, and viewer roles
-- **Project Organization** - Organize your monitoring endpoints by projects for better team collaboration
+Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](faq.md).
 
----
+## What Pulsimo does
 
-## 🎯 **The Problem We Solve**
+- **Endpoint checks.** HTTP and HTTPS (with methods, headers, auth and GraphQL), PostgreSQL,
+  MySQL, Redis, Elasticsearch, gRPC and WebSocket, every 10 seconds to every hour. Each check
+  records DNS, connect, TLS, first byte and transfer, and every HTTPS certificate is watched.
+- **Metrics and dashboards.** Point Pulsimo at any Prometheus `/metrics` and it scrapes on a
+  schedule. Graph with PromQL or a point-and-click builder, build Grafana-style dashboards or
+  import Grafana JSON, and judge a service from its own 5xx rate, p95 and traffic.
+- **Logs.** Ship logs with Fluent Bit or a shipper you already run, search them in the Log
+  Browser, and let new exceptions open incidents that resolve themselves.
+- **Infrastructure.** Hosts and containers from node_exporter and cAdvisor, and Kubernetes
+  clusters from kube-state-metrics, with alarms built in.
+- **Incidents and reliability.** Incidents carry the evidence and the impact, with ranked
+  probable causes. SLOs with error budgets and burn-rate alerts, deploy markers on every
+  chart, capacity forecasts and anomaly detection.
+- **Alerting.** Rules for checks, metrics, logs and traffic; delivery to Slack, Discord,
+  Microsoft Teams, Google Chat, email and webhooks; routing, digests, deploy grace and
+  maintenance windows.
+- **Administration.** Roles, API keys, an event trail of who did what, and pages that show
+  Pulsimo's own health, storage and retention.
 
-Modern infrastructure monitoring presents several challenges that traditional tools often fail to address adequately:
+## Contents
 
-### **1. Complexity and Fragmentation**
+### Get started
 
-**The Challenge:**  
-Traditional monitoring stacks like Prometheus + Grafana + Alertmanager require deploying, configuring, and maintaining multiple separate tools. Each tool has its own learning curve, configuration language, and operational requirements. Teams spend more time managing their monitoring infrastructure than actually monitoring their services.
+- [Installation](installation/README.md): Run Pulsimo on your own server with Docker Compose and the published images.
+- [Quick start](getting-started.md): From an empty install to your first endpoint, alert channel and metric source in about ten minutes.
+- [Your first project](first-project.md): Group endpoints into a project, set a reliability target and see it on the status board.
+- [Architecture](architecture.md): The services that make up Pulsimo, where data lives and how a check becomes an alert.
+- [Configuration](configuration/environment-variables.md): Every .env value: what it controls, which service reads it, defaults, ranges and recipes.
 
-**Pulsimo's Solution:**  
-An integrated, all-in-one platform where monitoring, alerting, incident management, and dependency tracking work seamlessly together. Deploy once, configure through an intuitive UI, and start monitoring in minutes—not days.
+### Services and checks
 
----
+- [Projects and overview](features/projects.md): The live status board, project reliability against targets and error budgets, and project analytics.
+- [Endpoints and checks](features/health-checks.md): What Pulsimo can check, every endpoint setting, and how a check decides Up, Degraded or Down.
+- [Monitoring from metrics](features/metric-monitors.md): Health from the app's own metrics (5xx, p95, traffic) instead of, or as well as, calling it.
+- [Service analytics](features/service-performance.md): Response times, Apdex and anomalies, network phases and certificates for every endpoint.
+- [Dependencies](features/dependencies.md): A live map of which service needs which, suggestions with evidence, and impact on incidents.
 
-### **2. Developer Experience**
+### Metrics and dashboards
 
-**The Challenge:**  
-Prometheus requires learning PromQL, Grafana needs dashboard JSON configurations, and Alertmanager uses YAML-based routing rules. Setting up a simple alert can take hours of documentation reading and trial-and-error.
+- [Metric sources](features/metrics/sources.md): Tell Pulsimo where /metrics lives and it pulls on a schedule.
+- [Metrics Explorer](features/metrics/explorer.md): Graph anything with PromQL or a point-and-click builder.
+- [Dashboards](features/dashboard.md): Grafana-style dashboards with an editor, variables and Grafana JSON import.
+- [Connected monitoring](features/metrics/connected-monitoring.md): One service, one place: endpoint checks, its metrics and its dashboards together.
+- [Discovered services](features/metrics/discovery.md): APIs, databases, hosts and containers found in your metrics, ready to monitor.
 
-**Pulsimo's Solution:**  
-A modern, intuitive web interface designed for both technical and non-technical users. Create endpoints, configure alerts, and manage incidents through simple forms—no query languages or configuration files required.
+### Logs
 
----
+- [Logs](features/logs/README.md): Collect app logs with Fluent Bit, search them in the Log Browser and link them to endpoints.
+- [Logs end to end](features/logs/walkthrough.md): Walkthrough: a Docker host's logs from Fluent Bit to endpoints and incidents.
+- [Incidents from logs](features/logs/incidents-from-logs.md): Exceptions in the logs open incidents that resolve themselves. Tune, test on 24 hours, mute.
 
-### **3. Incident Management Gap**
+### Infrastructure
 
-**The Challenge:**  
-Traditional monitoring tools tell you when something is down but provide no structured way to manage the incident lifecycle. Teams resort to external ticketing systems, spreadsheets, or tribal knowledge to track acknowledgements, investigations, and resolutions.
+- [Hosts and containers](features/infrastructure/README.md): Servers and containers from node_exporter, cAdvisor and their logs, with built-in alarms.
+- [Kubernetes](features/infrastructure/kubernetes.md): Clusters, nodes, workloads and pods from kube-state-metrics, with the agent in one kubectl apply.
 
-**Pulsimo's Solution:**  
-Built-in incident management with acknowledgement tracking, multi-user escalation, investigation notes, post-mortem generation, and complete audit trails—all integrated with your monitoring data.
+### Incidents and reliability
 
----
+- [Incidents and evidence](features/incidents.md): What the metrics showed, saved with the incident, and impact computed for you.
+- [Probable cause](features/probable-cause.md): Ranked causes from changes, logs and metrics. Confirm, resolve, and see what happened before.
+- [SLOs](features/reliability/slos.md): Error budgets, burn-rate alerts and real-user Apdex.
+- [Change markers](features/reliability/change-markers.md): Deploys, restarts and new routes drawn on every chart.
+- [Capacity and anomalies](features/reliability/capacity-and-anomalies.md): "Disk full in about 3 days" and "traffic 70% below last week".
 
-### **4. Service Dependencies Blindspot**
+### Alerting
 
-**The Challenge:**  
-When a service fails, understanding the blast radius and identifying which downstream services are affected requires manual investigation, tribal knowledge, or separate dependency mapping tools.
+- [Alarms and rules](features/alarms.md): Rules for logs, traffic, metrics, incidents and checks; acknowledging, routing and maintenance windows.
+- [Channels and delivery](features/alerts.md): Slack, Discord, Teams, Google Chat, email and webhooks, with tests, a delivery log and muting.
+- [Routing, digests and deploy grace](features/alert-routing.md): The right channel, fewer pages during deploys, and one digest for the small stuff.
 
-**Pulsimo's Solution:**  
-Automatic dependency discovery through traffic analysis, visual dependency graphs, critical path identification, and single-point-of-failure detection—helping you understand impact before your users do.
+### Administration
 
----
+- [Users and access](features/users.md): Roles, who needs attention, safe administration, and access that changes at once.
+- [Settings and API keys](features/settings.md): Organization, sign-in security, API keys, integrations and configuration backup.
+- [API metrics and Event trail](features/observability/api-metrics.md): How Pulsimo's API answers per route, and who did what, with filters and export.
 
-### **5. Alert Fatigue and Noise**
+### Pulsimo's own health
 
-**The Challenge:**  
-Traditional monitoring generates constant noise with rigid alerting rules. Teams either ignore alerts (missing real issues) or get overwhelmed by false positives during known maintenance windows.
+- [System and database health](features/observability/system-health.md): Every Pulsimo component probed with real uptime; storage, retention and maintenance jobs.
+- [Monitoring pipeline](features/observability/pipeline-health.md): Check lag, scrape success, alert delay and series per source.
 
-**Pulsimo's Solution:**  
-Intelligent alert policies with configurable thresholds, first-failure warnings, repeat interval controls, and multi-channel routing. Send critical alerts to PagerDuty, warnings to Slack, and summaries to email—all from one system.
+### API
 
----
+- [Authentication](api/authentication.md): Sign in with an API key or a session token, scopes, and error responses.
+- [API reference](api/README.md): Every REST endpoint, grouped by feature.
+- [Webhooks](api/webhooks.md): The JSON Pulsimo sends to webhook channels, and how to handle it.
 
-### **6. Data Sovereignty and Compliance**
+### Guides
 
-**The Challenge:**  
-Cloud-based monitoring services (DataDog, New Relic) send your operational data to external servers, creating compliance issues for regulated industries and raising data sovereignty concerns.
+- [Running in production](production.md): Secrets, HTTPS, firewall, backups, retention and upgrades.
+- [Best practices](best-practices.md): How to set up checks, alerts and projects so the right people hear about the right things.
+- [Troubleshooting](troubleshooting.md): Fixes for sign-in, checks, email, logs and metrics problems.
+- [FAQ](faq.md): Short answers to common questions.
+- [Release notes](release-notes.md): What changed in recent releases.
 
-**Pulsimo's Solution:**  
-Fully on-premise deployment with complete data control. Your monitoring data never leaves your infrastructure, ensuring compliance with GDPR, HIPAA, SOC2, and internal security policies.
+## Screenshots
 
----
+<table>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/services.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/services.png"><img src="images/screenshots/dark/services.png" alt="Status board" width="100%"></picture><br><b>Status board</b><br><sub>Every service live, grouped by project, with recent changes.</sub></td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/endpoints.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/endpoints.png"><img src="images/screenshots/dark/endpoints.png" alt="Endpoints" width="100%"></picture><br><b>Endpoints</b><br><sub>Health, slowest endpoints and service types, with discovered services to add.</sub></td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/projects.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/projects.png"><img src="images/screenshots/dark/projects.png" alt="Projects" width="100%"></picture><br><b>Projects</b><br><sub>Reliability against targets, error budgets and who needs attention.</sub></td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/service-dashboard.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/service-dashboard.png"><img src="images/screenshots/dark/service-dashboard.png" alt="Service dashboard" width="100%"></picture><br><b>Service dashboard</b><br><sub>A service's own metrics: request rate, error rate, latency and routes.</sub></td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/response-analytics.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/response-analytics.png"><img src="images/screenshots/dark/response-analytics.png" alt="Response analytics" width="100%"></picture><br><b>Response analytics</b><br><sub>Percentiles, spread and network phases for every check.</sub></td><td width="50%" valign="top"><img src="images/screenshots/dark/performance-insights.png" alt="Performance insights" width="100%"><br><b>Performance insights</b><br><sub>Apdex, anomalies and the endpoints that need attention.</sub></td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/alerting.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/alerting.png"><img src="images/screenshots/dark/alerting.png" alt="Alerting" width="100%"></picture><br><b>Alerting</b><br><sub>Open alarms, rules, channels, maintenance windows and the delivery log.</sub></td><td width="50%" valign="top"><img src="images/screenshots/light/incidents.png" alt="Incidents" width="100%"><br><b>Incidents</b><br><sub>Related failures grouped into one incident, with root cause and impact.</sub></td></tr>
+<tr><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/logs.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/logs.png"><img src="images/screenshots/dark/logs.png" alt="Logs" width="100%"></picture><br><b>Logs</b><br><sub>Search application logs, see what repeats and link them to endpoints.</sub></td><td width="50%" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="images/screenshots/dark/infrastructure.png"><source media="(prefers-color-scheme: light)" srcset="images/screenshots/light/infrastructure.png"><img src="images/screenshots/dark/infrastructure.png" alt="Infrastructure" width="100%"></picture><br><b>Infrastructure</b><br><sub>Hosts, containers and Kubernetes from the exporters you already run.</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="images/screenshots/dark/ssl-certificates.png" alt="SSL certificates" width="100%"><br><b>SSL certificates</b><br><sub>Expiry timeline, issuer, grade and TLS version for every HTTPS endpoint.</sub></td></tr>
+</table>
 
-## 💡 **The Motivation Behind Pulsimo**
+## Getting help
 
-### **Our Story**
+- [support@pulsimo.dev](mailto:support@pulsimo.dev) or the [contact page](https://pulsimo.github.io/contact/)
+- The [bug report form](https://docs.google.com/forms/d/e/1FAIpQLSc3ZuyIwqytCaw7NNatE79mkhB6DzbwMYq29fEIRC17bfO8vA/viewform)
 
-Pulsimo was born from real-world frustration with existing monitoring solutions. As software engineers managing production systems at scale, we repeatedly faced the same challenges:
-
-**The Prometheus Dilemma:**  
-While powerful, Prometheus requires significant expertise to operate effectively. Writing PromQL queries, managing retention policies, configuring federation, and debugging exporters consumed engineering hours that should have been spent on feature development.
-
-**The SaaS Trade-off:**  
-Cloud monitoring platforms offer great UX but at the cost of data sovereignty, vendor lock-in, and unpredictable pricing that scales with your success. For many organizations, especially in regulated industries, sending operational data to third parties is simply not an option.
-
-**The Integration Nightmare:**  
-Stitching together monitoring, alerting, incident management, and on-call rotation across multiple tools (Prometheus, Grafana, PagerDuty, Opsgenie, StatusPage) created operational complexity and a disjointed experience.
-
-### **Our Vision**
-
-We envisioned a monitoring platform that:
-
-✅ **Prioritizes Developer Experience** - Modern UI, intuitive workflows, and zero learning curve  
-✅ **Remains On-Premise** - Complete data control and compliance-friendly  
-✅ **Integrates Everything** - Monitoring, alerting, incidents, and dependencies in one platform  
-✅ **Scales Efficiently** - Performant architecture handling 500+ endpoints with sub-second response times  
-✅ **Stays Open** - Built with standard technologies, avoids vendor lock-in, and remains extensible
-
-### **Why "Pulsimo"?**
-
-The name combines **"Pulse"** (heartbeat/health monitoring) with **"mo"** (short for monitoring/momentum). Just as a pulse indicates life and health, Pulsimo continuously monitors your services' vitality, helping you maintain the momentum of your operations.
-
----
-
-## 🆚 **Pulsimo vs. Traditional Monitoring Stacks**
-
-| Feature | Pulsimo | Prometheus + Grafana + Alertmanager |
-|---------|---------|-------------------------------------|
-| **Setup Time** | 15 minutes with Docker Compose | Several hours to days |
-| **Learning Curve** | Intuitive UI, no special languages | Requires learning PromQL, Grafana queries |
-| **Incident Management** | Built-in with post-mortems | Requires external tools |
-| **Dependency Mapping** | Automatic discovery & visualization | Manual configuration or separate tools |
-| **Multi-Channel Alerts** | 6+ channels out-of-the-box | Basic webhook support, needs integration |
-| **User Management** | Built-in RBAC with 3 roles | Limited, requires external auth |
-| **Configuration** | Web UI with forms | YAML files and code |
-| **Database Monitoring** | Native PostgreSQL, MySQL, MongoDB support | Requires exporters and configuration |
-| **Message Queue Monitoring** | Built-in Kafka, Redis support | Requires custom exporters |
-| **Mobile Responsive** | Fully responsive modern UI | Dashboard dependent |
-| **Project Organization** | Native project grouping | Manual label-based organization |
-| **API Keys Management** | Built-in with UI | External token management |
-| **Post-Mortem Reports** | Automated generation with JSON export | Manual or external tools |
-| **Deployment** | Single Docker Compose command | Multiple components to configure |
-
----
-
-## 🎨 **Core Philosophy**
-
-### **1. Simplicity Without Compromise**
-Powerful features delivered through intuitive interfaces. Complex monitoring doesn't require complex tools.
-
-### **2. Data Sovereignty First**
-Your infrastructure data stays on your infrastructure. No third-party dependencies for core functionality.
-
-### **3. Developer-Centric Design**
-Built by developers, for developers. Every feature considers the on-call engineer's 3 AM experience.
-
-### **4. Production-Ready by Default**
-Optimized for performance, reliability, and scale. Battle-tested for production workloads from day one.
-
-### **5. Extensibility & Standards**
-Built on proven technologies (Rust, Node.js, PostgreSQL, Redis, React) with RESTful APIs for easy integration.
-
----
-
-## 🚦 **Current Release Status**
-
-**Version:** 1.0.0-beta  
-**Status:** Public Beta  
-**Deployment Model:** On-Premise (Docker Compose)
-
-### **Production Readiness**
-
-✅ **Core Features Complete** - All essential monitoring and alerting capabilities  
-✅ **Performance Optimized** - Tested with 500+ concurrent endpoints  
-✅ **Security Hardened** - JWT authentication, role-based access control, API keys  
-✅ **Database Migrations** - Managed schema evolution with rollback support  
-✅ **High Availability** - Stateless services, Redis caching, connection pooling  
-⚠️ **Beta Notice** - While stable, we recommend thorough testing before mission-critical production use
-
----
-
-## 📊 **Who Should Use Pulsimo?**
-
-### **Perfect For:**
-
-- **DevOps Teams** managing microservices architectures
-- **Platform Engineers** building internal developer platforms
-- **Site Reliability Engineers** (SRE) maintaining production systems
-- **Regulated Industries** (healthcare, finance, government) requiring data sovereignty
-- **Startups & Scale-ups** needing enterprise features without enterprise complexity
-- **Self-Hosted Advocates** preferring control over convenience
-
-### **Use Cases:**
-
-- **Microservices Monitoring** - Track health across distributed services
-- **API Gateway Monitoring** - Ensure API availability and performance
-- **Database Health Checks** - Monitor PostgreSQL, MySQL, MongoDB instances
-- **Message Queue Monitoring** - Track Kafka and Redis health
-- **Third-Party API Monitoring** - Monitor external dependencies
-- **Multi-Region Infrastructure** - Monitor services across geographic locations
-- **Compliance Monitoring** - Meet uptime SLAs with documented evidence
-
----
-
-## 🗺️ **Roadmap & Future Enhancements**
-
-### **Coming in Future Releases:**
-
-🔜 **Authentication Providers**  
-- Google OAuth 2.0  
-- GitHub OAuth  
-- Microsoft Azure AD  
-- SAML 2.0 for enterprise SSO
-
-🔜 **Advanced Monitoring**  
-- Custom metric collection  
-- Log aggregation and analysis  
-- Distributed tracing support  
-- Synthetic monitoring (user journeys)
-
-🔜 **Enhanced Alerting**  
-- Anomaly detection with ML  
-- Smart alert grouping  
-- On-call rotation scheduling  
-- PagerDuty integration
-
-🔜 **Deployment Options**  
-- Kubernetes Helm charts  
-- High-availability clustering  
-- Multi-region deployment support  
-- Cloud marketplace listings (AWS, Azure, GCP)
-
-🔜 **Collaboration Features**  
-- Team comments and discussions  
-- Status page generation  
-- Slack/Teams bot integration  
-- Mobile companion app
-
----
-
-## 📚 **Documentation Structure**
-
-This documentation is organized into the following sections:
-
-1. **[Installation Guide](installation/README.md)** - System requirements, Docker setup, environment configuration
-2. **[Getting Started](getting-started.md)** - Quick start guide and initial configuration
-3. **[Features Overview](features/README.md)** - Comprehensive guide to all platform features
-   - [Dashboard](features/dashboard.md)
-   - [Projects](features/projects.md)
-   - [Incidents](features/incidents.md)
-   - [Service Performance](features/service-performance.md)
-   - [Dependencies](features/dependencies.md)
-   - [Alerts & Notifications](features/alerts.md)
-   - [Users & RBAC](features/users.md)
-   - [Settings](features/settings.md)
-4. **[API Reference](api/README.md)** - RESTful API documentation for integrations
-5. **[Architecture](architecture.md)** - System architecture and design decisions
-6. **[Best Practices](best-practices.md)** - Recommendations for production deployment
-7. **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
-8. **[FAQ](faq.md)** - Frequently asked questions
-
----
-
-## 🤝 **Community & Support**
-
-### **Get Help**
-- **Documentation:** This comprehensive guide
-- **GitHub Issues:** Report bugs and request features
-- **Discussions:** Ask questions and share experiences
-
-### **Contributing**
-We welcome contributions! Whether it's bug reports, feature requests, documentation improvements, or code contributions, your input helps make Pulsimo better.
-
----
-
-## 📄 **License**
-
-Pulsimo is released under the MIT License. See the LICENSE file for details.
-
----
-
-## 🚀 **Ready to Get Started?**
-
-Jump to the **[Installation Guide](installation/README.md)** to deploy Pulsimo in your environment, or explore the **[Features Overview](features/README.md)** to learn about all capabilities.
-
----
-
-**Built with ❤️ for developers who value simplicity, control, and reliability.**
+Pulsimo is proprietary software; see the [LICENSE](../LICENSE).

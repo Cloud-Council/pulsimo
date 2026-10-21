@@ -1,720 +1,152 @@
-# Dependencies - Service Relationship Mapping
+# Dependencies
 
-The Dependencies feature provides powerful visualization and analysis of service relationships across your infrastructure. By automatically discovering and manually documenting how services depend on each other, you can understand blast radius, identify single points of failure, and predict cascade failures before they impact your users.
+> A live map of which service needs which, suggestions with evidence, and impact on incidents.
 
----
+## What it is
 
-## 🎯 **Overview**
+A live map of which service needs which. "Orders API depends on PostgreSQL" is used to:
 
-Modern applications rarely exist in isolation. They depend on databases, APIs, message queues, and other services to function. Understanding these relationships is critical for incident response, architecture planning, and reliability engineering. Pulsimo's dependency mapping transforms implicit relationships into explicit, visual, actionable knowledge.
+- show the **impact** of an outage: who else is hit, and who can't work at all;
+- add the likely cause to **alerts**: "probably caused by PostgreSQL, down since 14:02";
+- rank **probable causes** on incidents: a dependency that failed first;
+- find **weak spots**: single points of failure, long chains, cycles.
 
-### **Key Benefits**
+Everything is scoped to your organization. No other organization can see or change your map.
 
-✅ **Automatic Discovery** - AI-powered detection of service dependencies  
-✅ **Visual Mapping** - Interactive graph showing all relationships  
-✅ **Impact Analysis** - Understand blast radius when services fail  
-✅ **Critical Path** - Identify services on the critical path to user functionality  
-✅ **SPOF Detection** - Find single points of failure automatically  
-✅ **Cascade Prediction** - Anticipate downstream impacts  
-✅ **Architecture Documentation** - Living diagram of your infrastructure  
-✅ **Planning Support** - Inform maintenance windows and deployment strategies  
+## Where to find it
 
----
+- **Dependencies** in the sidebar: **Map**, **Suggestions**, **Analysis**.
+- **Incident page → Dependencies**: what the failing service needs and who depends on it.
+- **Alerts** for a service that goes down include a *Dependencies* section.
 
-## 📊 **Dependencies Page Components**
+## The map
 
-### **1. Page Header**
+The KPI row at the top:
 
-**Page Title**
-- **"Service Dependencies"** - Clear identification
-- **Subtitle:** "Map and analyze service relationships"
+| Figure | What it counts |
+|---|---|
+| Services on the map | Services with a known dependency, out of all services |
+| Dependencies | All dependencies, and how many are *required* |
+| Affected now | Services whose dependency is unhealthy |
+| Single points of failure | See Analysis |
+| Suggestions | Waiting for you to confirm |
+| Cycles | See Analysis |
 
-**View Toggle** (Top-left)
-- **Graph View** (default) - Visual dependency graph
-- **List View** - Tabular dependency listing
-- **Matrix View** - Grid showing all relationships
+When anything is affected, a banner names the unhealthy services and who they affect.
 
-**Action Buttons** (Top-right)
-- **Add Dependency** (blue-cyan gradient) - Manual creation
-- **Auto-Discover** - Trigger automatic discovery
-- **Export Graph** - Download as PNG, SVG, or JSON
-- **Layout Options** - Choose graph layout algorithm
+**Reading the map**: an arrow **A → B** means *A depends on B*. Services nobody depends on
+(front ends, public APIs) are at the top; what they need is below them; the deepest
+dependencies (databases, caches) are at the bottom. Services with no known dependency sit
+in a last row.
 
----
+| On a service | Meaning |
+|---|---|
+| Green / amber / red dot | Up / degraded / down, from its checks and open incidents |
+| Project colour and name | Its project (Orphan Endpoints included) |
+| **N incidents** (bug icon: from logs) | Open incidents |
+| **needs N unhealthy** (amber border) | Something it requires is down or degraded |
+| **changed** | A deploy or restart of its metric source in the last 6 hours |
 
-### **2. Graph Controls Panel**
+| On an arrow | Meaning |
+|---|---|
+| Solid | **Required**: it can't work without it |
+| Dashed | **Degrades without it**: it keeps working, worse |
+| Dotted | **Fallback**: used only when the main one fails |
+| Red, moving | What it points to is **down** |
+| Amber | What it points to is **degraded** |
+| Label | The kind of connection, when not HTTP: Database, Cache, Queue… |
 
-**Zoom Controls:**
-- **Zoom In** (+) button
-- **Zoom Out** (-) button
-- **Fit to Screen** - Auto-scale to fit all nodes
-- **1:1 Reset** - Return to actual size
-- Mouse wheel zoom support
-- Pinch-to-zoom on touch devices
+**Using the map**:
 
-**Layout Algorithms:**
-- **Force-Directed** (default) - Physics-based automatic layout
-- **Hierarchical** - Top-down or left-right tree structure
-- **Circular** - Nodes arranged in circle
-- **Grid** - Organized grid layout
-- **Custom** - Manual positioning (drag and drop)
+- Click a service for its details: status, the open incident, recent changes, what it
+  depends on and what needs it, how many services it can affect, and **It depends on…**
+  to add one.
+- Click an arrow to see how it was found (evidence, who confirmed it), and **Change or
+  remove**.
+- **Find a service**, highlight **a project**, show **Problems only** (unhealthy services
+  and what they need), or hide services with no known dependencies.
+- Drag services to arrange them. The layout is saved for you. **Auto layout** arranges
+  them again.
+- **Add dependency** (or drag from one service's bottom handle to another): choose the
+  service, what it depends on, how much it needs it, and the kind of connection.
 
-**Filter Controls:**
-- **Show All Dependencies** (default)
-- **Show Strong Only** - Hide weak dependencies
-- **Show Critical Path** - Highlight critical services
-- **Show SPOFs** - Highlight single points of failure
-- **Filter by Project** - Show only selected project(s)
-- **Filter by Status** - Healthy, Down, or Both
+## Suggestions: found from what Pulsimo measures
 
-**Legend:**
-- Node colors explanation
-- Edge types explanation
-- Icon meanings
-- Status indicators
+Every 30 minutes (`DEPENDENCY_SCAN_MINUTES`), or when you press **Look for dependencies**,
+Pulsimo looks in what it already collects:
 
----
+| Source | What it sees | Confidence |
+|---|---|---|
+| **Client metrics** | An app's outgoing request metrics name another service's address (`server_address`, `peer_service`, `host`… labels). The evidence says how often it calls, e.g. "calls payments-api about 12 times a minute" | 85% |
+| **Logs** | The app's own lines call another service's address (URLs, `upstream` / `peer_service` fields), or fail to connect to it (`dial tcp payments:8080: connection refused`, `could not connect to server: postgres:5432`). At least 2 lines in the last hour. Access-log lines are ignored: they are requests *to* the app, and their referer URLs would mislead | 70–80% |
+| **Incident timing** | Over 30 days, at least 3 times, B failed first and A failed 15 s to 2 min later. It must happen more often in that order than the other way round, on different hosts, and not during an outage that took most of your services down at once | 40–60% |
 
-### **3. Interactive Dependency Graph**
+Each suggestion shows its evidence:
 
-#### **Nodes (Services)**
+- the summary;
+- for logs, a sample line;
+- for incident timing, the dates.
 
-Each service appears as a node with:
+Each suggestion can be:
 
-**Visual Representation:**
-- **Circle or Box** shape
-- **Color-coded by status:**
-  - 🟢 **Green** - Service healthy (UP)
-  - 🔴 **Red** - Service down
-  - 🟡 **Yellow** - Service degraded
-  - ⚫ **Gray** - Service disabled/not monitored
-- **Size** - Proportional to importance or connection count
-- **Icon** - Service type icon (database, API, queue, etc.)
+- **Confirmed**, choosing *Required / Degrades without it / Fallback* and the kind of
+  connection (guessed from the port: 5432 is a database, 6379 a cache…);
+- marked **Not a dependency**, after which it is never suggested again.
 
-**Node Label:**
-- Service name (truncated if long)
-- Full name on hover
-- Optional URL display
+Suggestions that stop being true are removed:
 
-**Node Badges:**
-- **SPOF** badge - Single point of failure
-- **Critical** badge - On critical path
-- **Project** badge - Project color indicator
-- **Alert** badge - Has active incident
+- timing suggestions as soon as the pattern no longer holds;
+- metrics and logs suggestions after 7 days without being seen.
 
-**Node Interaction:**
-- **Click** - Select node, show details panel
-- **Double-click** - Navigate to service details
-- **Right-click** - Context menu (add dependency, view incidents, etc.)
-- **Drag** - Move node (custom layout mode)
-- **Hover** - Show tooltip with quick info
+Nothing is added to the map without a person confirming it. Pulsimo no longer guesses
+dependencies from service types ("every front end depends on every back end").
 
----
+## Analysis
 
-#### **Edges (Dependencies)**
+| Section | What it lists |
+|---|---|
+| **Single points of failure** | A service required (directly or not) by 2 or more services that have no fallback for it, and those services |
+| **Longest chains** | A needs B needs C…: each extra link is another way to fail |
+| **Cycles** | Services that end up depending on themselves |
+| **Not on the map yet** | Services with no known dependency either way, with **It depends on…** |
 
-Lines connecting nodes represent dependencies:
+Click any service to jump to it on the map.
 
-**Visual Representation:**
-- **Arrow** pointing from dependent → dependency
-  - Example: API → Database means "API depends on Database"
-- **Color-coded by dependency type:**
-  - 🔵 **Blue/Solid** - STRONG dependency (cannot function without)
-  - 🟡 **Yellow/Dashed** - WEAK dependency (degraded without)
-  - ⚫ **Gray/Dotted** - MONITORING dependency (just tracking)
+## During incidents
 
-**Edge Labels:**
-- Dependency type (STRONG/WEAK/MONITORING)
-- Optional description
-- Discovery method (auto/manual)
+- **Incident page → Dependencies**:
+  - *It depends on*: what the service needs, marked when unhealthy. A required dependency
+    that is unhealthy too is called out as the **likely cause**;
+  - *Affected*: every service that depends on it, directly or not, and how many can't work
+    without it.
+- **Alerts** ("Service down", escalations, incidents from logs) add:
 
-**Edge Interaction:**
-- **Click** - Select edge, show details
-- **Hover** - Show tooltip with dependency info
-- **Right-click** - Edit or delete dependency
+  ```
+  Dependencies:
+  - Probably caused by a dependency that is down: PostgreSQL (down since 14:02 UTC).
+  - 3 services can't work without it: Orders API, Checkout, Billing worker.
+  ```
 
----
+  Only **required** dependencies are used for this.
+- **Probable cause** ([Probable cause](probable-cause.md)) ranks "a dependency went down
+  first".
 
-#### **Special Visual Indicators**
+## Settings
 
-**Critical Path Highlighting:**
-- When "Show Critical Path" enabled
-- Nodes on path: **Bright orange** border
-- Edges on path: **Thicker, orange** lines
-- Visual chain from frontend to backend
+| Variable | Default | Meaning |
+|---|---|---|
+| `DEPENDENCY_SCAN_MINUTES` | `30` | How often suggestions are looked for (metrics collector) |
 
-**Single Point of Failure (SPOF):**
-- When detected: **Red pulsing border**
-- Badge overlay: "⚠️ SPOF"
-- Tooltip explains why it's a SPOF
+## Limits
 
-**Cascade Failure Prediction:**
-- When a service goes down
-- Potentially affected services: **Yellow** highlight
-- Definitely affected services (strong dependency): **Orange** highlight
-- Click to see impact analysis
-
-**Orphaned Services:**
-- Services with no dependencies
-- **Dotted border**
-- Can be filtered to show/hide
+- The map shows monitored endpoints. A database or host that Pulsimo only found in metrics
+  appears once you monitor it (Services → Discovered).
+- Logs suggestions need the service's logs linked to its endpoint
+  ([Logs](logs/README.md)). Client-metrics suggestions need the app's metric source
+  linked to its endpoint ([Connected monitoring](metrics/connected-monitoring.md)).
+- "Affected now" uses each service's own status and open incidents. The computed health
+  from dependencies (fallbacks, degraded mode) is shown on the endpoint's health section.
 
 ---
 
-### **4. Node Details Panel**
-
-**Appears when node is selected (right sidebar):**
-
-#### **Service Information**
-
-**Basic Details:**
-- Service name (editable)
-- Service type
-- URL
-- Project assignment
-- Current status (real-time)
-
-**Health Metrics:**
-- Current response time
-- 24-hour availability
-- Recent incidents count
-- Last check timestamp
-
----
-
-#### **Upstream Dependencies**
-
-**Services This Service Depends On:**
-
-List showing:
-- Dependency name
-- Dependency type (STRONG/WEAK/MONITORING)
-- Health status
-- Response time
-- Description
-- Actions: Edit, Remove
-
-**Impact Statement:**
-- "If [dependency] goes down, this service will..."
-  - **STRONG:** "...fail completely"
-  - **WEAK:** "...operate with reduced functionality"
-  - **MONITORING:** "...continue normally (no functional dependency)"
-
----
-
-#### **Downstream Dependencies**
-
-**Services That Depend on This Service:**
-
-List showing:
-- Dependent service name
-- Dependency type
-- Health status
-- Description
-- Quick link to that service
-
-**Blast Radius:**
-- Number of services directly affected
-- Number of services indirectly affected (cascades)
-- Total potential impact if this service fails
-
----
-
-#### **Dependency Actions**
-
-**Quick Actions:**
-- **Add Upstream Dependency** - This service depends on...
-- **Add Downstream Dependency** - Other service depends on this...
-- **View All Incidents** - Historical incidents for this service
-- **View Performance** - Service performance analytics
-- **Edit Service** - Modify endpoint configuration
-
----
-
-### **5. Auto-Discovery System**
-
-#### **Automatic Dependency Detection**
-
-**How It Works:**
-
-**Traffic Analysis:**
-- Monitors network calls between services
-- Detects patterns of communication
-- Infers dependencies from call frequency
-- Uses correlation algorithms
-
-**Detection Methods:**
-- DNS query analysis
-- HTTP request patterns
-- Database connection tracking
-- Message queue subscriptions
-- Service mesh integration (if available)
-
-**Discovery Triggers:**
-- **Scheduled:** Runs daily (configurable)
-- **Manual:** Click "Auto-Discover" button
-- **Continuous:** Real-time detection (enterprise feature)
-
----
-
-#### **Discovered Dependencies Queue**
-
-**Review Before Adding:**
-
-**Pending Discoveries Table:**
-- **Source Service** - The dependent
-- **Target Service** - The dependency
-- **Confidence Score** - AI confidence (0-100%)
-- **Evidence** - Why detected (call frequency, patterns)
-- **Suggested Type** - STRONG/WEAK recommendation
-- **Actions:** Approve, Reject, Edit
-
-**Bulk Actions:**
-- Approve all high-confidence (>90%)
-- Reject all low-confidence (<50%)
-- Approve selected
-
-**Why Manual Review?**
-- Prevents false positives
-- Allows correction of dependency type
-- Lets you add descriptions
-- Maintains data quality
-
----
-
-#### **Discovery Settings**
-
-**Configuration Options:**
-- **Auto-Approve Threshold** - Auto-approve if confidence > X%
-- **Detection Sensitivity** - How aggressive to detect
-- **Exclusions** - Services to ignore
-- **Monitoring Period** - How long to analyze traffic
-- **Schedule** - When to run discovery
-
----
-
-### **6. Manual Dependency Creation**
-
-#### **Add Dependency Dialog**
-
-**Step 1: Select Source Service**
-- Dropdown or search
-- "The service that depends on..."
-- Shows all monitored endpoints
-
-**Step 2: Select Target Service**
-- Dropdown or search
-- "The service it depends on..."
-- Can be external (not monitored)
-
-**Step 3: Choose Dependency Type**
-
-**STRONG (Critical Dependency):**
-- Source CANNOT function without target
-- Example: Web app → Authentication service
-- If target down, source is effectively down
-- Highest severity
-
-**WEAK (Graceful Degradation):**
-- Source can function without target, but degraded
-- Example: Web app → Recommendation engine
-- If target down, source works but with reduced features
-- Medium severity
-
-**MONITORING (Tracking Only):**
-- No functional dependency
-- Just tracking relationship for documentation
-- Example: Mobile app → Analytics service
-- If target down, source unaffected
-- Lowest severity, informational
-
-**Step 4: Add Description (Optional)**
-- Explain the dependency
-- Example: "Requires authentication tokens"
-- Appears in tooltips and reports
-
-**Step 5: Set Alerts (Optional)**
-- Alert when this dependency fails
-- Configure notification channel
-- Set failure threshold
-
-**Step 6: Create**
-- Dependency added immediately
-- Appears in graph
-- Audit log entry created
-
----
-
-### **7. Critical Path Analysis**
-
-#### **What is the Critical Path?**
-
-**Definition:**
-The chain of services that, if any fail, will cause end-user-facing functionality to fail.
-
-**Example:**
-```
-User Browser
-    ↓
-Load Balancer
-    ↓
-API Gateway (CRITICAL)
-    ↓
-Auth Service (CRITICAL)
-    ↓
-User Database (CRITICAL)
-```
-
-If ANY service in this chain fails, users cannot authenticate → critical failure.
-
----
-
-#### **How Pulsimo Identifies Critical Path**
-
-**Algorithm:**
-1. Identify user-facing services (frontend, APIs)
-2. Trace all STRONG dependencies recursively
-3. Mark all services on these chains as "critical"
-4. Highlight in graph visualization
-
-**Visual Indicators:**
-- Orange border on critical nodes
-- Thicker orange lines for critical edges
-- "CRITICAL" badge
-- Priority sorting in lists
-
-**Why It Matters:**
-- Focus monitoring on what really matters
-- Prioritize optimization efforts
-- Plan redundancy for critical services
-- Inform incident response priorities
-
----
-
-### **8. Single Point of Failure (SPOF) Detection**
-
-#### **What is a SPOF?**
-
-**Definition:**
-A service that, if it fails, causes multiple other services to fail, with no redundancy.
-
-**Characteristics:**
-- Many services depend on it
-- No alternative/backup available
-- High blast radius
-
-**Example:**
-- Single database with no replica
-- Authentication service with no failover
-- Payment gateway with no backup provider
-
----
-
-#### **How Pulsimo Detects SPOFs**
-
-**Detection Criteria:**
-1. Service has ≥3 downstream dependencies
-2. All dependencies are STRONG type
-3. No redundancy detected (no parallel services)
-4. No failover configuration
-
-**Visual Indicators:**
-- Red pulsing border
-- "⚠️ SPOF" badge
-- Listed in SPOF widget
-- Highlighted in reports
-
-**SPOF Dashboard Widget:**
-- Lists all detected SPOFs
-- Blast radius (number of affected services)
-- Recommendations for mitigation
-- Priority for adding redundancy
-
----
-
-#### **SPOF Mitigation Recommendations**
-
-**For Each SPOF:**
-- **Add Redundancy** - Deploy backup instance
-- **Implement Failover** - Automatic switching
-- **Circuit Breakers** - Prevent cascade failures
-- **Graceful Degradation** - Design services to handle dependency failures
-
----
-
-### **9. Impact Analysis**
-
-#### **Blast Radius Calculation**
-
-**When a Service Fails:**
-
-**Directly Affected:**
-- Services with STRONG dependency on failed service
-- Will fail immediately
-
-**Indirectly Affected:**
-- Services downstream of directly affected services
-- Cascade failure prediction
-
-**Partially Affected:**
-- Services with WEAK dependency on failed service
-- Degraded functionality
-
-**Visual Representation:**
-- Failed service: Red
-- Directly affected: Dark orange
-- Indirectly affected: Light orange
-- Partially affected: Yellow
-- Unaffected: Green
-
-**Impact Report:**
-- Total services affected: X
-- Users potentially impacted: Y (if configured)
-- Revenue impact: $Z (if configured)
-- Recovery priority: High/Medium/Low
-
----
-
-#### **Cascade Failure Scenarios**
-
-**Simulation Tool:**
-- Select any service
-- Click "Simulate Failure"
-- Shows predicted impact
-- Helps with planning and testing
-
-**Use Cases:**
-- Maintenance window planning
-- Disaster recovery planning
-- Architecture review
-- Capacity planning
-
----
-
-### **10. List View**
-
-**Alternative to Graph View:**
-
-**Dependencies Table:**
-
-**Columns:**
-- **Source Service** - The dependent
-- **Dependency Type** - STRONG/WEAK/MONITORING
-- **Target Service** - The dependency
-- **Status** - Both services' health
-- **Description** - Explanation
-- **Discovery Method** - Auto/Manual
-- **Created Date** - When added
-- **Actions** - Edit, Delete
-
-**Features:**
-- Sortable columns
-- Filter by type, project, status
-- Search by service name
-- Export to CSV
-- Bulk operations
-
-**When to Use List View:**
-- Need tabular format for reporting
-- Searching for specific dependency
-- Bulk editing
-- Exporting data
-
----
-
-### **11. Matrix View**
-
-**Grid Visualization:**
-
-**Rows:** Services (Source)  
-**Columns:** Services (Target)  
-**Cells:** Dependency indicators
-
-**Cell Colors:**
-- 🔵 **Blue** - STRONG dependency
-- 🟡 **Yellow** - WEAK dependency
-- ⚫ **Gray** - MONITORING dependency
-- **White/Empty** - No dependency
-
-**Features:**
-- Quickly see all relationships
-- Identify clusters
-- Find missing dependencies
-- Symmetry analysis
-
-**Use Cases:**
-- Architecture review
-- Dependency audit
-- Quick reference
-- Pattern identification
-
----
-
-## 🎯 **Best Practices**
-
-### **Dependency Mapping Strategy**
-
-**Start with Critical Services:**
-1. Identify user-facing services first
-2. Map their immediate dependencies
-3. Work backwards through the stack
-4. Use auto-discovery for gap finding
-
-**Regular Reviews:**
-- Monthly dependency audit
-- Update descriptions
-- Verify accuracy
-- Remove obsolete dependencies
-
-**Documentation:**
-- Add descriptions to all dependencies
-- Explain why the dependency exists
-- Document known issues or limitations
-- Link to architecture diagrams
-
----
-
-### **Dependency Types Guidelines**
-
-**Use STRONG When:**
-- Service cannot function at all without dependency
-- Example: API → Database (data required)
-- Example: Frontend → Authentication (login required)
-- Results in complete failure if dependency down
-
-**Use WEAK When:**
-- Service can work with reduced functionality
-- Example: E-commerce → Recommendations (nice-to-have)
-- Example: Website → Analytics (tracking not critical)
-- Graceful degradation possible
-
-**Use MONITORING When:**
-- No functional dependency
-- Just tracking for awareness
-- Example: Service → Logging system
-- Example: App → Metrics collector
-
----
-
-### **Architecture Improvements**
-
-**Reduce SPOFs:**
-- Add redundancy to identified SPOFs
-- Implement database replication
-- Deploy services in HA mode
-- Use load balancers
-
-**Simplify Dependencies:**
-- Reduce unnecessary dependencies
-- Combine similar services
-- Use caching to reduce dependency calls
-- Implement circuit breakers
-
-**Design for Failure:**
-- Assume dependencies will fail
-- Implement retry logic
-- Use timeouts appropriately
-- Build fallback mechanisms
-
----
-
-## 💡 **Advanced Features**
-
-### **Dependency Versioning**
-
-**Track Changes Over Time:**
-- Historical dependency graph snapshots
-- Compare current vs. previous architecture
-- Identify architecture evolution
-- Rollback if needed
-
----
-
-### **External Dependencies**
-
-**Non-Monitored Services:**
-- Add third-party APIs
-- Document cloud services
-- Track external SaaS dependencies
-- Import from architecture tools
-
----
-
-### **Dependency Health Score**
-
-**Calculate Overall Health:**
-- Based on uptime of all dependencies
-- Weighted by dependency type
-- Predictive health scoring
-- Trend analysis
-
----
-
-### **Integration with Incidents**
-
-**Automatic Correlation:**
-- When service fails, check dependencies
-- Suggest root cause (upstream failure)
-- Link related incidents
-- Faster resolution
-
----
-
-## 🆘 **Troubleshooting**
-
-### **Graph Not Rendering**
-
-**Possible Causes:**
-- Too many nodes (performance)
-- Browser compatibility
-- JavaScript errors
-
-**Solutions:**
-- Filter to specific project
-- Use List View instead
-- Try different browser
-- Clear browser cache
-
----
-
-### **Auto-Discovery Finding Nothing**
-
-**Possible Causes:**
-- Not enough traffic data
-- Services not communicating during analysis period
-- Network monitoring not enabled
-
-**Solutions:**
-- Extend monitoring period
-- Trigger some traffic manually
-- Check network monitoring configuration
-- Use manual dependency creation
-
----
-
-### **Incorrect Dependencies Detected**
-
-**Possible Causes:**
-- Correlation not causation
-- Test traffic included
-- Shared infrastructure
-
-**Solutions:**
-- Review pending discoveries carefully
-- Reject false positives
-- Add to exclusion list
-- Adjust detection sensitivity
-
----
-
-## 📚 **Related Documentation**
-
-- **[Dashboard](dashboard.md)** - Service status in dependency context
-- **[Incidents](incidents.md)** - Impact analysis during incidents
-- **[Service Performance](service-performance.md)** - Dependency performance tracking
-- **[Projects](projects.md)** - Project-level dependencies
-- **[Alerts](alerts.md)** - Dependency failure alerts
-
----
-
-**Understanding your service dependencies is understanding your architecture. Map them well to build resilience, respond faster, and plan better!** 🔗
+← [Service analytics](service-performance.md) · [Contents](../README.md) · [Metric sources](metrics/sources.md) →

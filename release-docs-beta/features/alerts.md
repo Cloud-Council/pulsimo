@@ -1,856 +1,245 @@
-# Alerts & Notifications - Multi-Channel Alerting System
+# Channels and delivery
 
-The Alerts feature ensures your team is immediately notified when services experience issues. With support for six notification channels, intelligent routing, and configurable policies, you can eliminate alert fatigue while ensuring critical issues never go unnoticed.
+> Slack, Discord, Teams, Google Chat, email and webhooks, with tests, a delivery log and muting.
 
----
+## What it is
 
-## 🎯 **Overview**
+**Alerting** (sidebar) is one page for what is wrong and who gets told. Its **Alarms**
+tabs (Open now, History, Rules, Maintenance) are described in [Alarms and rules](alarms.md). This chapter
+covers the **Delivery** tabs and the help tab:
 
-Effective alerting is the bridge between monitoring and incident response. Pulsimo's alerting system automatically sends notifications when endpoints fail, routing them through your preferred communication channels with smart controls to prevent notification spam while ensuring visibility into critical issues.
+| Tab | What it shows |
+|---|---|
+| **Channels** | Each alert channel: Slack, Discord, Microsoft Teams, Google Chat, email or a webhook. For each one: whether its last delivery worked, its 7-day counts, and how often it sends reminders |
+| **Delivery log** | Every alert Pulsimo tried to send, with the full message and the platform's answer |
+| **Muted** | Endpoints whose alerts are switched off for now |
+| **How it works** | When alerts are sent, reminders, holds, deploys, flapping, digests, routing |
 
-### **Key Benefits**
+## Where to find it
 
-✅ **Multi-Channel Support** - Six platforms out-of-the-box (Email, Slack, Discord, Teams, Google Chat, Webhooks)  
-✅ **Intelligent Routing** - Send critical to PagerDuty, warnings to Slack  
-✅ **Alert Policies** - Per-endpoint configuration of when and how to alert  
-✅ **Repeat Control** - Prevent alert spam with configurable intervals  
-✅ **First-Failure Warnings** - Option for immediate notification on first failure  
-✅ **Recovery Notifications** - Know when services come back online  
-✅ **Testing & Validation** - Test channels before relying on them  
-✅ **Delivery Tracking** - Audit trail of all notifications sent  
+In the sidebar, open **Alerting**, then **Channels**, **Delivery log** or **Muted**. Direct links: `/dashboard/alarms?tab=channels`, `?tab=deliveries`, `?tab=muted`, `?tab=how`. The old `/dashboard/notifications` address still works and opens the same tab. **Add channel** is in the page header on every tab.
 
----
+## The figures at the top
 
-## 📊 **Alerts Page Components**
+| Figure | Meaning | Click |
+|---|---|---|
+| Channels | Active channels, and how many are paused | Opens Channels |
+| Delivered, 24 h | Alerts delivered in the last 24 hours, and when the last one was sent | Opens the log |
+| Failed, 24 h | Deliveries the platform refused or couldn't receive | Opens the log, showing failures only |
+| Muted endpoints | Endpoints with alerts switched off | Opens Muted |
+| Digest | How often low-urgency findings are grouped into one message | Opens How alerts work |
 
-### **1. Page Header**
+When there is no channel at all, a banner warns you: incidents still open, but nobody is
+told.
 
-**Page Title**
-- **"Notification Channels"** or **"Alerts"** - Clear identification
-- **Subtitle:** "Configure how and where you receive alerts"
+## Adding a channel
 
-**Action Buttons** (Top-right)
-- **Add Channel** (blue-cyan gradient) - Create new notification channel
-- **Test All Channels** - Send test notification to all enabled channels
-- **View Alert History** - See all notifications sent
+Click **Add channel**, then:
 
-**Stats Summary:**
-- **Active Channels** - Number of enabled channels
-- **Alerts Sent Today** - Count of notifications sent in last 24 hours
-- **Delivery Success Rate** - Percentage of successful deliveries
-- **Pending Tests** - Channels not yet tested
+1. **Platform.** Each platform tile lists the steps to get its webhook:
 
----
+   | Platform | You enter |
+   |---|---|
+   | Slack | The Incoming Webhook URL; optionally a channel override (only older webhooks use it) |
+   | Discord | The channel webhook URL |
+   | Microsoft Teams | The URL from a Teams workflow or connector |
+   | Google Chat | The space webhook URL |
+   | Email | One or more addresses, separated by commas (at most 20) |
+   | Webhook | URL, method (POST, PUT or PATCH) and optional headers, e.g. `Authorization` |
 
-### **2. Notification Channels List**
+2. **Name.** Something people recognize, e.g. "Slack – production on-call".
+3. **Severity.** *Everything* (info, warning, critical and the digest), *Warning and up*,
+   or *Critical only* (a pager or on-call channel). See [Alarms and rules](alarms.md).
+4. **Projects** (when there is more than one). Only alarms about the chosen projects;
+   nothing chosen means every project. Alarms that belong to no project always come.
+5. **Repeat while firing.** While a critical alarm stays unacknowledged, this channel gets a
+   reminder every 5 min, 15 min, 30 min, 1 h, 2 h, 4 h, or a custom number of minutes
+   (1–1440).
+6. **Which alerts.** Choose **Everything**, or only alerts about **Applications**,
+   **Databases**, **Hosts** or **Containers**. The category comes from the endpoint's
+   linked metrics. Alerts without linked metrics always go to every channel.
+7. **Send a test after saving** (on by default for a new channel). The test goes through
+   the same path as real alerts, and the result shows when the channel is saved.
+
+The form scrolls on small screens, and the buttons stay at the bottom. If something is
+missing (a name, a URL that doesn't start with `https://`), the reason shows next to the
+button.
+
+### Secrets
+
+Webhook URLs and header values are secrets, so the page never shows them in full. You see
+`https://hooks.slack.com/…a1b2`. When you edit a channel:
+
+- leave the URL field empty to keep the saved one;
+- for headers, leave the value empty to keep it;
+- type a new value to replace it.
+
+If you change a channel's platform, you need to enter a new URL.
+
+## The channel card
+
+| Part | Meaning |
+|---|---|
+| Name, platform and target | e.g. `hooks.slack.com · #ops`, `oncall@company.com and 2 more`, `POST api.example.com` |
+| Health line | *Last delivered 2 h ago*, *Last delivery failed 5 min ago: The platform answered HTTP 404 (the webhook no longer exists; create a new one)*, *Nothing sent yet*, or *Paused* |
+| Delivered / Failed, 7 d | Real alerts only; tests don't count |
+| Repeat | The reminder interval |
+| Route line | The severity it takes, the categories and the number of projects |
+
+The actions are:
+
+- **Send test:** sends a real message now and shows *Test delivered in 0.8 s* or the platform's error.
+- **Log:** opens the delivery log for this channel.
+- **Pause / Resume:** a paused channel gets nothing, and keeps its settings.
+- **Edit.**
+- **Delete:** administrators only. It also removes the channel's delivery history and its mutes. The dialog offers **Pause instead**.
+
+Members and administrators can add, edit, test and pause channels; viewers can only look.
+
+## Delivery log
+
+The log shows every attempt, newest first:
+
+- a coloured dot for the kind of alert: red for down or escalated, green for recovered,
+  amber for warnings, blue for tests;
+- the subject, the channel, the alert kind and the endpoint;
+- the result: **Sent**, **Failed** or **Pending**;
+- when it happened.
+
+Click an entry to see the full message, the platform's error if any, when it was queued
+and delivered, and a link to the endpoint.
+
+You can filter by channel and by result, hide tests, and load older entries 50 at a time.
+The log refreshes every 15 seconds.
+
+Common errors:
+
+| Error | Fix |
+|---|---|
+| `HTTP 404 (the webhook no longer exists…)` | The webhook was deleted in Slack, Discord or Teams. Create a new one and edit the channel |
+| `HTTP 401/403 (the webhook URL or token was refused)` | Wrong URL, or a header such as `Authorization` is wrong |
+| `HTTP 429 (rate limited…)` | The platform is throttling; fewer reminders (a longer repeat) help |
+| `Could not reach the webhook: …` | DNS, firewall or TLS problem between Pulsimo and the URL |
+| `Email is not set up: set SMTP_HOST…` | Add the SMTP settings to `.env` and restart the notification service |
+| `SMTP server refused the email: …` | Wrong SMTP username or password, or the server doesn't allow the sender |
+
+## Muted
+
+This tab lists every endpoint whose alerts are switched off. For each one you see whether
+all channels or just one are muted, the reason, who muted it, and until when ("until
+unmuted" if it has no end).
+
+- **Unmute** turns alerts back on (members and administrators).
+- To mute an endpoint, open its card on **Services → Endpoints**.
+
+## How alerts are sent
+
+Every alert is an **alarm** with a lifecycle ([Alarms and rules](alarms.md)): it is sent when it opens and
+when it turns critical, reminded while critical and unacknowledged, held during
+maintenance or while an upstream service is down, and closed with a Resolved message to
+the channels that heard about it.
+
+| Situation | What happens |
+|---|---|
+| An endpoint goes down | After its alert policy's failures, the channels its policy picked (or every channel that takes critical alarms) get **"… is down"**: what is wrong, what its linked metrics and logs show, and a dependency that is down if there is one |
+| It stays down | Each channel that got it is reminded at its own repeat interval until someone acknowledges the alarm or its incident |
+| Someone acknowledges | The channels that got it are told who is on it; reminders and escalation stop |
+| It recovers | **Resolved**, with how long it lasted, to the channels that heard about it |
+| A service it depends on is already down | It is recorded but held, so people get one alarm for the root cause; if it is still down after the upstream recovers, it is sent then |
+| A deploy or restart just happened | A Down alert waits 3 minutes. If the endpoint recovers in that time, nothing is sent |
+| It flaps | At most 3 Down alerts per endpoint per hour, plus one *"… is unstable"* warning |
+| Alarm rules, logs and metrics find something | Sent as alarms with the rule's severity and channels. Anomalies and other low-urgency findings are grouped into one digest every `DIGEST_INTERVAL_MINUTES` (default 60), sent to channels that take everything |
+
+### What each platform receives
+
+| Platform | Format |
+|---|---|
+| Slack | A message with a coloured bar: red for down, green for recovered, amber for warnings, blue for tests |
+| Discord | An embed in the same colours |
+| Microsoft Teams | A card in the same colours |
+| Google Chat | Bold title and text |
+| Email | Plain text, sent through SMTP (STARTTLS on port 587, TLS on 465) |
+| Webhook | JSON, shown below |
+
+The webhook JSON looks like this:
 
-**Grid or List View:**
-
-Each channel displays as a card showing:
-
-#### **Channel Card Components**
-
-**Header:**
-- **Platform Icon** - Visual identifier (📧 Email, 💬 Slack, 🎮 Discord, etc.)
-- **Channel Name** - Friendly name you assigned
-- **Status Badge:**
-  - 🟢 **Active** - Enabled and tested
-  - 🟡 **Untested** - Created but not validated
-  - 🔴 **Failed** - Last test or alert failed
-  - ⚫ **Disabled** - Manually disabled
-
-**Channel Details:**
-- **Platform Type** - Email, Slack, Discord, Microsoft Teams, Google Chat, Custom Webhook
-- **Destination** - Email address, webhook URL (partially masked), channel name
-- **Created Date** - When channel was added
-- **Last Used** - Timestamp of last alert sent
-- **Delivery Stats:**
-  - Total alerts sent
-  - Success rate percentage
-  - Recent failures count
-
-**Repeat Interval:**
-- How often to repeat alerts
-- Example: "Every 15 minutes"
-- Prevents alert spam
-
-**Quick Actions:**
-- **Test** - Send test notification
-- **Edit** - Modify channel configuration
-- **Disable/Enable** - Toggle channel on/off
-- **Delete** - Remove channel
-- **View History** - See all alerts sent via this channel
-
----
-
-### **3. Add Channel Dialog**
-
-Click "Add Channel" to open the creation dialog.
-
-#### **Step 1: Choose Platform**
-
-**Six Platform Options:**
-
----
-
-### **📧 Email Notifications**
-
-**Use Cases:**
-- Non-urgent alerts
-- Summary reports
-- Stakeholder notifications
-- Audit trail
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Friendly identifier
-- Example: "Team Email Alerts", "On-Call Engineer Email"
-
-**Email Address** (Required)
-- Recipient email address
-- Supports multiple addresses (comma-separated)
-- Example: team@company.com, oncall@company.com
-
-**Subject Template** (Optional)
-- Customize email subject
-- Variables: {service_name}, {status}, {timestamp}
-- Default: "[ALERT] {service_name} is {status}"
-
-**Email Format:**
-- HTML (rich formatting, default)
-- Plain Text (simple, widely compatible)
-
-**Repeat Interval:**
-- How often to repeat if not acknowledged
-- Options: 2min, 5min, 15min, 30min, 1h, 2h
-- Recommended: 15-30 minutes
-
-**SMTP Requirements:**
-- Must configure SMTP settings in environment variables
-- See Installation Guide for SMTP configuration
-- Providers: Gmail, AWS SES, SendGrid, Mailgun
-
----
-
-### **💬 Slack Integration**
-
-**Use Cases:**
-- Team collaboration
-- Real-time alerts
-- Quick incident acknowledgement
-- Popular choice for DevOps teams
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Example: "Slack Production Alerts", "Slack DevOps Channel"
-
-**Webhook URL** (Required)
-- Slack incoming webhook URL
-- Get from: https://api.slack.com/messaging/webhooks
-- Example: https://hooks.slack.com/services/T00/B00/XXX
-
-**How to Get Webhook:**
-1. Go to Slack App settings
-2. Navigate to "Incoming Webhooks"
-3. Click "Add to Slack"
-4. Select channel (e.g., #production-alerts)
-5. Copy webhook URL
-
-**Slack Channel** (Optional)
-- Override default channel
-- Use for routing to different channels
-- Example: #critical-alerts, #team-notifications
-
-**Mention Users** (Optional)
-- Tag users on critical alerts
-- Format: @username or @channel
-- Example: @oncall, @here
-
-**Message Format:**
-- Rich (with attachments, colors, buttons) - Default
-- Simple (plain text message)
-
-**Repeat Interval:**
-- Recommended: 15 minutes for team channels
-- Use shorter intervals (5min) for critical services
-
-**Test Button:**
-- Sends sample alert to verify webhook
-- Check Slack channel for test message
-
----
-
-### **🎮 Discord Integration**
-
-**Use Cases:**
-- Gaming companies
-- Tech communities
-- Developer teams using Discord
-- Real-time collaboration
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Example: "Discord DevOps", "Discord Server Alerts"
-
-**Webhook URL** (Required)
-- Discord channel webhook
-- Get from: Server Settings → Integrations → Webhooks
-
-**How to Get Webhook:**
-1. Open Discord server settings
-2. Go to "Integrations"
-3. Click "Create Webhook" or "New Webhook"
-4. Select channel for alerts
-5. Copy webhook URL
-
-**Username** (Optional)
-- Display name for bot
-- Default: "Pulsimo Monitor"
-- Customizable for branding
-
-**Avatar URL** (Optional)
-- Bot avatar image URL
-- PNG or JPG format
-- Default: Pulsimo logo
-
-**Embed Color** (Optional)
-- Color for alert embeds
-- Red for DOWN, Green for UP
-- Auto-colored by status (default)
-
-**Repeat Interval:**
-- Recommended: 10-15 minutes
-
----
-
-### **👥 Microsoft Teams Integration**
-
-**Use Cases:**
-- Enterprise organizations
-- Office 365 users
-- Corporate environments
-- Integration with Microsoft ecosystem
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Example: "Teams Production Alerts", "Teams IT Channel"
-
-**Webhook URL** (Required)
-- Teams incoming webhook connector
-- Get from: Teams channel → Connectors → Incoming Webhook
-
-**How to Get Webhook:**
-1. Open Teams channel
-2. Click "..." (More options)
-3. Select "Connectors"
-4. Find "Incoming Webhook"
-5. Click "Configure"
-6. Name the webhook and upload icon (optional)
-7. Copy webhook URL
-
-**Card Style:**
-- MessageCard (rich formatting) - Default
-- Adaptive Card (modern, interactive)
-
-**Theme Color:**
-- Accent color for alerts
-- Auto-set based on severity
-
-**Repeat Interval:**
-- Recommended: 15-30 minutes for Teams channels
-
----
-
-### **📱 Google Chat Integration**
-
-**Use Cases:**
-- Google Workspace organizations
-- G Suite users
-- Teams using Google ecosystem
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Example: "Google Chat Ops Room", "GChat Alerts"
-
-**Webhook URL** (Required)
-- Google Chat space webhook
-- Get from: Google Chat space → Configure webhooks
-
-**How to Get Webhook:**
-1. Open Google Chat space
-2. Click space name → Configure webhooks
-3. Create new webhook
-4. Name and optionally add avatar
-5. Copy webhook URL
-
-**Thread Replies:**
-- Keep alerts in same thread (organize better)
-- Create new thread per alert (default)
-
-**Repeat Interval:**
-- Recommended: 15 minutes
-
----
-
-### **🔗 Custom Webhook**
-
-**Use Cases:**
-- PagerDuty integration
-- Opsgenie integration
-- Custom notification systems
-- Internal tools and APIs
-- Any HTTP-compatible service
-
-**Configuration Fields:**
-
-**Channel Name** (Required)
-- Example: "PagerDuty Integration", "Custom Alert System"
-
-**Webhook URL** (Required)
-- Your custom endpoint URL
-- Must accept HTTP POST requests
-- Example: https://api.pagerduty.com/incidents
-- Example: https://yourcompany.com/webhook/alerts
-
-**HTTP Method:**
-- POST (default, most common)
-- GET (for simple integrations)
-- PUT (for update operations)
-
-**Headers** (Optional)
-- Custom HTTP headers
-- Common uses:
-  - Authorization: Bearer YOUR_API_KEY
-  - Content-Type: application/json
-  - X-API-Key: YOUR_KEY
-
-**Example Headers:**
-```
-Authorization: Bearer sk_live_abc123
-Content-Type: application/json
-X-Custom-Header: value
-```
-
-**Payload Template** (Optional)
-- Customize JSON payload
-- Variables available:
-  - {service_name}
-  - {service_url}
-  - {status} (UP/DOWN)
-  - {timestamp}
-  - {response_time}
-  - {error_message}
-
-**Default Payload:**
 ```json
 {
-  "service": "{service_name}",
-  "status": "{status}",
-  "url": "{service_url}",
-  "timestamp": "{timestamp}",
-  "message": "{error_message}"
+  "event": "endpoint_down",
+  "label": "Down",
+  "subject": "🚨 Service Down: Orders API",
+  "message": "…",
+  "endpoint_id": "…",
+  "channel": "PagerDuty bridge",
+  "timestamp": "2026-10-14T09:12:03Z",
+  "source": "pulsimo",
+  "severity": "critical",
+  "alarm": {
+    "id": "…", "kind": "endpoint_down", "source": "check", "severity": "critical",
+    "state": "firing", "value": null, "threshold": null, "unit": null,
+    "first_fired_at": "2026-10-14T09:12:01Z", "incident_id": "…", "project_id": "…"
+  }
 }
 ```
 
-**Timeout:**
-- Request timeout in seconds
-- Default: 10 seconds
-- Range: 5-30 seconds
+`alarm` is there for every alarm message (not for tests and digests). Deduplicate on
+`alarm.id`; a message with `alarm.state` `resolved` closes it.
 
-**Retry Logic:**
-- Retry on failure: Yes/No
-- Max retries: 3 (default)
-- Backoff strategy: Exponential
+`event` is one of:
 
-**Repeat Interval:**
-- Configure based on downstream system
-- Recommended: 10-15 minutes
+- `endpoint_down`
+- `endpoint_recovered`
+- `endpoint_partial_outage`
+- `endpoint_warning`
+- `org_major_outage`
+- `incident_escalated`
+- `ssl_certificate_expiring`
+- `test`
 
----
+## Email setup
 
-#### **Step 2: Test Channel**
+Email uses the notification service's environment (`.env`):
 
-**After Configuration:**
-
-**Test Button:**
-- Sends sample alert
-- Verifies connectivity
-- Validates configuration
-- Shows success or error message
-
-**Test Message Contents:**
-- Service name: "Test Service"
-- Status: DOWN (to mimic real alert)
-- Timestamp: Current time
-- Message: "This is a test alert from Pulsimo"
-
-**Verify Receipt:**
-- Check destination platform
-- Confirm message received
-- Verify formatting looks correct
-- Check if mentions/tags work (if configured)
-
-**If Test Fails:**
-- Review error message
-- Common issues:
-  - Invalid webhook URL
-  - Network connectivity
-  - Authentication failed
-  - Rate limiting
-- Correct configuration and retry
-
-**Save Channel:**
-- Only after successful test (recommended)
-- Can save without testing (not recommended)
-- Status badge shows "Untested" if not verified
-
----
-
-## 🔔 **Alert Policies**
-
-### **Per-Endpoint Configuration**
-
-Alert policies are configured when creating or editing endpoints.
-
-#### **Failure Threshold**
-
-**What It Is:**
-- Number of consecutive failures before creating incident and sending alerts
-- Prevents false positives from transient issues
-
-**Configuration:**
-- Range: 1-10 consecutive failures
-- Default: 3 failures
-- Recommended: 3-5 for most services
-
-**Example:**
-- Threshold: 3
-- Check interval: 10 seconds
-- First failure: 10:00:00 - No alert
-- Second failure: 10:00:10 - No alert  
-- Third failure: 10:00:20 - **Alert sent!**
-
-**When to Use Different Values:**
-- **Threshold 1:** Critical services, need immediate alert
-- **Threshold 3:** Standard services (recommended)
-- **Threshold 5:** Services with occasional flakiness
-- **Threshold 10:** Very flaky services (consider fixing root cause)
-
----
-
-#### **First Failure Warning**
-
-**What It Is:**
-- Optional flag to send warning on first failure, even if threshold not reached
-- Provides early heads-up
-
-**Use Cases:**
-- Extremely critical services
-- Services with low tolerance for downtime
-- Proactive teams wanting early warnings
-
-**Configuration:**
-- Checkbox: Enable first-failure warnings
-- Separate notification channel (optional)
-- Different message format (warning vs. alert)
-
-**Behavior:**
-- First failure: Sends "Warning" notification
-- Threshold reached: Sends "Alert" notification + creates incident
-
-**Example:**
-- First failure: "⚠️ Warning: Service X failed first check"
-- Third failure: "🚨 Alert: Service X is DOWN, incident created"
-
-**Considerations:**
-- Can increase alert volume
-- May cause alert fatigue if service is flaky
-- Use sparingly for truly critical services
-
----
-
-#### **Repeat Interval**
-
-**What It Is:**
-- How often to send the same alert if incident not acknowledged
-- Prevents missing critical alerts
-- Prevents alert spam
-
-**Options:**
-- Don't repeat (send once only)
-- Every 2 minutes
-- Every 5 minutes
-- Every 10 minutes
-- Every 15 minutes (recommended default)
-- Every 30 minutes
-- Every 1 hour
-- Every 2 hours
-
-**Behavior:**
-- Alert sent when incident created
-- If not acknowledged, resend after interval
-- Continue repeating until acknowledged
-- Stop when incident acknowledged or resolved
-
-**Best Practices:**
-- Critical services: 5-10 minutes
-- Standard services: 15-30 minutes
-- Low-priority: 1-2 hours or don't repeat
-
-**Example Timeline:**
-```
-10:00:00 - Service goes DOWN, alert sent
-10:15:00 - Not acknowledged, alert sent again
-10:30:00 - Not acknowledged, alert sent again
-10:35:00 - Incident acknowledged, alerts stop
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=alerts@company.com
+SMTP_PASSWORD=app-password
+FROM_EMAIL=alerts@company.com
 ```
 
----
+After changing them, restart the notification service:
 
-#### **Recovery Notifications**
+```bash
+docker compose up -d notification
+```
 
-**What It Is:**
-- Alert when service recovers and comes back online
-- Confirms issue is resolved
+Then use **Send test** on an email channel.
 
-**Configuration:**
-- Checkbox: Send recovery notifications
-- Same channels as failure alerts
-- Optional: Different channel for recoveries
+## API
 
-**Message Format:**
-- "✅ Service X has recovered and is now UP"
-- Duration of outage
-- Time to recovery
-- Link to incident
+| Method and path | Does |
+|---|---|
+| `GET /api/v1/notification-channels` | Channels, paused ones included, with masked secrets, target, categories and 7-day stats |
+| `GET /api/v1/notification-channels/summary` | The figures at the top |
+| `POST /api/v1/notification-channels` | Add (`name`, `channel_type`, `config`, `repeat_interval_minutes`, `categories`, `min_severity`, `project_ids`) |
+| `PUT /api/v1/notification-channels/:id` | Edit. Masked or empty secrets keep the saved value |
+| `PUT /api/v1/notification-channels/:id/active` | `{ "is_active": false }` pauses, `true` resumes |
+| `POST /api/v1/notification-channels/:id/test` | Sends a test and waits for the result (`ok`, `error`, `took_ms`) |
+| `DELETE /api/v1/notification-channels/:id` | Delete (administrators) |
+| `GET /api/v1/notifications/deliveries` | The log. Filters: `channel_id`, `endpoint_id`, `status`, `include_tests`, `limit`, `before` |
 
-**Use Cases:**
-- Confirm resolution to team
-- Close the loop on incidents
-- Provide visibility into recovery
-- Measure MTTR
+Errors come back with a message and a status: 403 when you're not allowed, 404 when the
+channel doesn't exist, 422 when the settings are invalid, and 504 when the notification
+service didn't answer the test.
 
-**Considerations:**
-- Adds to notification volume
-- Most teams find them valuable
-- Can be disabled for non-critical services
+## Limits
 
----
-
-#### **Channel Selection**
-
-**Per-Endpoint Channel Routing:**
-
-**Configuration:**
-- Select which channels receive alerts for this endpoint
-- Can choose multiple channels
-- Different channels for different severity
-
-**Example Routing Strategy:**
-
-**Critical Services:**
-- PagerDuty (via Custom Webhook)
-- Slack #critical-alerts
-- Email to on-call engineer
-- Microsoft Teams for visibility
-
-**Standard Services:**
-- Slack #general-alerts
-- Email to team distribution list
-
-**Low-Priority Services:**
-- Email only
-- Once daily summary (future feature)
+- A test or an alert to a platform that is slow to answer can take up to 15 seconds. The
+  test gives up after 20 seconds.
+- Delivery history older than 30 days doesn't count in the channel figures. It stays in
+  the log until it's cleaned up by the maintenance retention settings.
 
 ---
 
-## 📊 **Alert History**
-
-### **Notification Log**
-
-**View All Sent Notifications:**
-
-**Table Columns:**
-- **Timestamp** - When alert sent
-- **Service** - Affected endpoint
-- **Channel** - Which notification channel used
-- **Status** - Sent successfully, Failed, Pending
-- **Delivery Time** - Latency from trigger to delivery
-- **Recipient** - Who received (email) or where sent (channel name)
-- **Message Preview** - Truncated alert text
-- **Actions** - View full details, Retry if failed
-
-**Filters:**
-- By date range
-- By service
-- By channel
-- By status (success/failure)
-- By incident
-
-**Export:**
-- Download as CSV
-- Audit trail for compliance
-- Analyze alert patterns
-
----
-
-### **Channel Performance Metrics**
-
-**Per-Channel Statistics:**
-
-**Delivery Success Rate:**
-- Percentage of successfully delivered alerts
-- Goal: >99%
-- Track over time
-
-**Average Delivery Latency:**
-- Time from alert trigger to delivery
-- Example: 1.2 seconds
-- Identifies slow channels
-
-**Failure Analysis:**
-- Common failure reasons
-- Webhook errors
-- Rate limiting issues
-- Network timeouts
-
-**Reliability Scoring:**
-- A-F grade per channel
-- Based on success rate and latency
-- Informs channel selection
-
----
-
-## 🎯 **Best Practices**
-
-### **Reducing Alert Fatigue**
-
-**Problem:**
-Too many alerts → Team ignores alerts → Critical issues missed
-
-**Solutions:**
-
-**1. Appropriate Failure Thresholds**
-- Use 3-5 consecutive failures
-- Don't alert on first failure (unless critical)
-- Account for network flakiness
-
-**2. Reasonable Repeat Intervals**
-- 15-30 minutes is usually appropriate
-- Don't spam every minute
-- Trust your team to acknowledge
-
-**3. Severity-Based Routing**
-- Critical: Page immediately
-- High: Slack during work hours
-- Medium: Email summary
-- Low: Daily digest
-
-**4. Maintenance Windows**
-- Schedule known downtime
-- Suppress alerts during maintenance
-- Avoid false alarms
-
-**5. Regular Review**
-- Analyze alert volume
-- Identify noisy endpoints
-- Adjust thresholds
-- Fix flaky services instead of tuning alerts
-
----
-
-### **Multi-Channel Strategy**
-
-**Layered Approach:**
-
-**Layer 1: Critical (Immediate Action Required)**
-- PagerDuty or similar on-call tool
-- SMS alerts
-- Phone calls
-- Example: Payment processing down
-
-**Layer 2: High (Team Awareness)**
-- Slack #critical-alerts channel
-- Microsoft Teams alerts
-- Example: Core API degraded
-
-**Layer 3: Standard (Monitoring)**
-- Slack #general-alerts channel
-- Email to team list
-- Example: Non-critical service down
-
-**Layer 4: Informational (FYI)**
-- Email only
-- Daily summary reports
-- Example: Internal tool restart
-
----
-
-### **Testing Your Alerts**
-
-**Regular Testing Schedule:**
-- **Monthly:** Test all channels
-- **After Changes:** Test immediately
-- **New Channels:** Test before relying on them
-- **Disaster Recovery:** Full alert system test quarterly
-
-**Test Scenarios:**
-- Normal alert flow
-- Repeat alerts (wait for interval)
-- Recovery notifications
-- Multiple simultaneous alerts
-- Alert during outage (resilience)
-
----
-
-## 💡 **Advanced Features**
-
-### **Alert Suppression Rules**
-
-**Temporary Muting:**
-- Mute specific endpoint alerts
-- Mute all alerts (emergency maintenance)
-- Scheduled suppression windows
-- Auto-unmute after duration
-
-**Use Cases:**
-- During deployments
-- Planned maintenance
-- Known issues being worked on
-- Noisy service temporarily
-
----
-
-### **Alert Aggregation**
-
-**Future Feature:**
-- Group related alerts
-- Single notification for multiple failures
-- Example: "5 services in us-east-1 are down" instead of 5 separate alerts
-
----
-
-### **Escalation Policies**
-
-**Future Feature:**
-- Alert primary on-call first
-- If not acknowledged in X minutes, alert secondary
-- Continue escalating up chain
-- Integration with PagerDuty/Opsgenie
-
----
-
-### **Smart Alerting**
-
-**Future Feature:**
-- Machine learning to reduce false positives
-- Anomaly detection
-- Contextual alerts based on time/day
-- Predictive alerts before failure
-
----
-
-## 🆘 **Troubleshooting**
-
-### **Alerts Not Being Sent**
-
-**Possible Causes:**
-- Notification channel disabled
-- Failure threshold not reached
-- Service disabled
-- Channel configuration error
-
-**Solutions:**
-1. Check channel is enabled (green status)
-2. Verify endpoint has channel assigned
-3. Confirm failure threshold reached
-4. Test channel manually
-5. Check alert history for error messages
-
----
-
-### **Slack Alerts Not Appearing**
-
-**Common Issues:**
-- Invalid webhook URL
-- Webhook deleted in Slack
-- Channel archived
-- Rate limiting
-
-**Solutions:**
-- Regenerate webhook in Slack
-- Verify channel exists and is active
-- Check Slack App status
-- Test webhook directly with curl
-- Review error messages in Pulsimo
-
----
-
-### **Email Alerts Going to Spam**
-
-**Common Causes:**
-- SMTP not configured with proper sender domain
-- Email not authenticated (SPF, DKIM)
-- Recipient email filtering
-- Email provider reputation
-
-**Solutions:**
-- Use authenticated SMTP provider (SendGrid, AWS SES)
-- Configure SPF and DKIM records
-- Whitelist sender address
-- Use custom domain, not free email providers
-- Test with different recipient addresses
-
----
-
-### **Custom Webhook Failing**
-
-**Common Issues:**
-- Incorrect URL
-- Authentication header missing
-- Timeout too short
-- Payload format mismatch
-- SSL certificate issues
-
-**Solutions:**
-- Test webhook URL with curl or Postman
-- Verify authentication credentials
-- Check receiving system logs
-- Increase timeout setting
-- Review payload template against API requirements
-- Check for SSL/TLS issues
-
----
-
-### **Too Many Duplicate Alerts**
-
-**Causes:**
-- Repeat interval too short
-- Service flapping (up/down repeatedly)
-- Multiple channels configured
-
-**Solutions:**
-- Increase repeat interval
-- Investigate service flakiness (root cause)
-- Increase failure threshold
-- Consolidate channels
-- Use alert aggregation (when available)
-
----
-
-## 📚 **Related Documentation**
-
-- **[Incidents](incidents.md)** - How alerts trigger incidents
-- **[Dashboard](dashboard.md)** - Service status monitoring
-- **[Projects](projects.md)** - Project-level alert configuration
-- **[Settings](settings.md)** - SMTP configuration for email alerts
-- **[Getting Started](../getting-started.md)** - Initial alert setup
-
----
-
-**Effective alerting is about signal, not noise. Configure your channels wisely, test regularly, and always be refining. Your future on-call self will thank you!** 🔔
+← [Alarms and rules](alarms.md) · [Contents](../README.md) · [Routing, digests and deploy grace](alert-routing.md) →
