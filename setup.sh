@@ -147,18 +147,21 @@ if [ ! -f .env ]; then
     echo "🔐 Generating secure credentials..."
     JWT_SECRET=$(openssl rand -base64 32 2>/dev/null || cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     DB_PASSWORD=$(openssl rand -base64 24 2>/dev/null || cat /dev/urandom | tr -dc 'a-zA-Z0-9!@#$%^&*' | fold -w 24 | head -n 1)
+    METRICS_SECRET_KEY=$(openssl rand -base64 32 2>/dev/null || cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     
     # Update .env file
     if [ "$(uname)" == "Darwin" ]; then
         # macOS
-        sed -i '' "s/HOST_IP=localhost/HOST_IP=$HOST_IP/" .env
-        sed -i '' "s/CHANGE_THIS_TO_RANDOM_SECRET_IN_PRODUCTION_USE_OPENSSL_RAND/$JWT_SECRET/" .env
-        sed -i '' "s/ChangeThisPassword123!/$DB_PASSWORD/" .env
+        sed -i '' "s|HOST_IP=localhost|HOST_IP=$HOST_IP|" .env
+        sed -i '' "s|CHANGE_THIS_TO_RANDOM_SECRET_IN_PRODUCTION_USE_OPENSSL_RAND|$JWT_SECRET|" .env
+        sed -i '' "s|^METRICS_SECRET_KEY=CHANGE_THIS_TO_RANDOM_SECRET$|METRICS_SECRET_KEY=$METRICS_SECRET_KEY|" .env
+        sed -i '' "s|ChangeThisPassword123!|$DB_PASSWORD|" .env
     else
         # Linux
-        sed -i "s/HOST_IP=localhost/HOST_IP=$HOST_IP/" .env
-        sed -i "s/CHANGE_THIS_TO_RANDOM_SECRET_IN_PRODUCTION_USE_OPENSSL_RAND/$JWT_SECRET/" .env
-        sed -i "s/ChangeThisPassword123!/$DB_PASSWORD/" .env
+        sed -i "s|HOST_IP=localhost|HOST_IP=$HOST_IP|" .env
+        sed -i "s|CHANGE_THIS_TO_RANDOM_SECRET_IN_PRODUCTION_USE_OPENSSL_RAND|$JWT_SECRET|" .env
+        sed -i "s|^METRICS_SECRET_KEY=CHANGE_THIS_TO_RANDOM_SECRET$|METRICS_SECRET_KEY=$METRICS_SECRET_KEY|" .env
+        sed -i "s|ChangeThisPassword123!|$DB_PASSWORD|" .env
     fi
     
     echo "   ✅ Generated secure credentials"
@@ -172,6 +175,7 @@ if [ ! -f .env ]; then
     echo "   Server IP:       $HOST_IP"
     echo "   JWT Secret:      [Generated]"
     echo "   DB Password:     [Generated]"
+    echo "   Metrics key:     [Generated]"
     echo ""
     echo "⚠️  IMPORTANT:"
     echo ""
@@ -199,7 +203,7 @@ echo "This will download pre-built images from Docker Hub..."
 echo "Download size: ~2-3 GB total"
 echo ""
 
-$DOCKER_COMPOSE docker-compose.yml pull
+$DOCKER_COMPOSE -f docker-compose.yml pull
 
 echo ""
 echo "✅ All images downloaded"
@@ -211,7 +215,7 @@ echo "  🚀 STARTING SERVICES"
 echo "=============================================================="
 echo ""
 
-$DOCKER_COMPOSE docker-compose.yml up -d
+$DOCKER_COMPOSE -f docker-compose.yml up -d
 
 echo ""
 echo "⏳ Waiting for services to initialize..."
@@ -226,8 +230,8 @@ for i in {1..6}; do
     sleep 5
     
     # Check if all containers are running
-    RUNNING=$($DOCKER_COMPOSE docker-compose.yml ps --services --filter "status=running" | wc -l)
-    TOTAL=$($DOCKER_COMPOSE docker-compose.yml ps --services | wc -l)
+    RUNNING=$($DOCKER_COMPOSE -f docker-compose.yml ps --services --filter "status=running" | wc -l)
+    TOTAL=$($DOCKER_COMPOSE -f docker-compose.yml ps --services | wc -l)
     
     if [ "$RUNNING" -eq "$TOTAL" ]; then
         break
@@ -319,7 +323,8 @@ echo "=============================================================="
 echo ""
 echo "1. Open your browser: http://${HOST_IP}:${FRONTEND_PORT}"
 echo ""
-echo "2. Click 'Register' to create your organization"
+echo "2. Sign in as superadmin@pulsimo.io with the password admin,"
+echo "   then change that password at once (Users → your row → Change password)"
 echo ""
 echo "3. Add your first service endpoint"
 echo ""
@@ -327,10 +332,10 @@ echo "=============================================================="
 echo "  🔧 USEFUL COMMANDS"
 echo "=============================================================="
 echo ""
-echo "   View logs:       $DOCKER_COMPOSE docker-compose.yml logs -f"
-echo "   Stop services:   $DOCKER_COMPOSE docker-compose.yml down"
-echo "   Restart:         $DOCKER_COMPOSE docker-compose.yml restart"
-echo "   Check status:    $DOCKER_COMPOSE docker-compose.yml ps"
+echo "   View logs:       $DOCKER_COMPOSE -f docker-compose.yml logs -f"
+echo "   Stop services:   $DOCKER_COMPOSE -f docker-compose.yml down"
+echo "   Restart:         $DOCKER_COMPOSE -f docker-compose.yml restart"
+echo "   Check status:    $DOCKER_COMPOSE -f docker-compose.yml ps"
 echo "   Stats:           docker stats"
 echo ""
 echo "=============================================================="

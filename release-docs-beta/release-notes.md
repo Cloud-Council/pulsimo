@@ -4,6 +4,42 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 24 Oct 2026
+
+Images: migrations `rc1beta-v0.1.6`, api-gateway `rc1beta-v0.1.9`, checker `rc1beta-v0.1.2`,
+notification `rc1beta-v0.0.4`, dependency-tracker `rc1beta-v0.1.1`, maintenance
+`rc1beta-v0.0.4`, metrics-collector `rc1beta-v0.0.3`, frontend `rc1beta-v0.2.2`. No new
+migrations and no new settings.
+
+### Overview
+
+The first page after sign-in was rebuilt. Its trend badges were fixed text and its small
+charts were random. It now shows: a status line ("All 7 endpoints are operational" or which
+ones are down), five figures with real trends, a live 24-hour heartbeat for every endpoint,
+one list of everything that needs attention (incidents, alarms, expiring certificates,
+error budgets, capacity, flapping endpoints, projects below target, dependencies), recent
+changes, the slowest endpoints, 30 days of reliability, and the projects. A new
+organization sees a setup checklist instead of empty charts.
+
+### Sign-up turned off
+
+The **Register** page now opens the sign-in page. Sign in with the administrator created on
+install (`superadmin@pulsimo.io`, password `admin`), change its password, and add people from
+**Users**.
+
+### Staying up through restarts
+
+The services no longer stop when PostgreSQL or Redis is briefly unreachable at start (a
+restart, or a name lookup failing while containers start): they wait and try again. Wrong
+credentials still stop them at once with the reason. The notification service reconnects to
+Redis on its own after Redis restarts, and its health check reports whether it is connected.
+
+### Probable cause
+
+A check that fails because the connection was refused or timed out now shows that reason,
+not only "error sending request". When a linked metric source stops answering at the same
+time as the endpoint (its process or container stopped), that is offered as a probable cause.
+
 ## 17 Oct 2026
 
 ### API metrics and Event trail

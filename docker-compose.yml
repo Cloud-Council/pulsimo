@@ -11,7 +11,7 @@
 #
 # Image tags: each Pulsimo image has its own default tag below (the release that
 # was built for it). To change one, set its variable in .env, e.g.
-# API_GATEWAY_VERSION=rc1beta-v0.1.8. PULSIMO_VERSION, when set, puts every image
+# API_GATEWAY_VERSION=rc1beta-v0.1.9. PULSIMO_VERSION, when set, puts every image
 # on that one tag (what ./build-and-push.sh <version> produces); leave it unset
 # to use the per-image tags.
 #
@@ -85,7 +85,7 @@ services:
   # image, so release them with ./build-and-push.sh <version> and set
   # PULSIMO_VERSION to that version.
   migrations:
-    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.5}}
+    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.6}}
     container_name: pulsimo-migrations
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitoring}:${POSTGRES_PASSWORD:-monitoring_password}@postgres:5432/${POSTGRES_DB:-monitoring_system}
@@ -101,7 +101,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.8}}
+    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.9}}
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -175,7 +175,7 @@ services:
   # BACKEND - Health Checker Service
   # ============================================================================
   checker:
-    image: pulsimo/pulsimo_be_checker:${CHECKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.1}}
+    image: pulsimo/pulsimo_be_checker:${CHECKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.2}}
     container_name: pulsimo-checker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -210,7 +210,7 @@ services:
   # BACKEND - Notification Service
   # ============================================================================
   notification:
-    image: pulsimo/pulsimo_be_notifications:${NOTIFICATION_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
+    image: pulsimo/pulsimo_be_notifications:${NOTIFICATION_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.4}}
     container_name: pulsimo-notification
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -252,7 +252,7 @@ services:
   # BACKEND - Dependency Tracker Service
   # ============================================================================
   dependency-tracker:
-    image: pulsimo/pulsimo_be_dependency_tracer:${DEPENDENCY_TRACKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.0}}
+    image: pulsimo/pulsimo_be_dependency_tracer:${DEPENDENCY_TRACKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.1}}
     container_name: pulsimo-dependency-tracker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -284,7 +284,7 @@ services:
   # BACKEND - Maintenance Scheduler Service
   # ============================================================================
   maintenance-scheduler:
-    image: pulsimo/pulsimo_be_maintenance_scheduler:${MAINTENANCE_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
+    image: pulsimo/pulsimo_be_maintenance_scheduler:${MAINTENANCE_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.4}}
     container_name: pulsimo-maintenance
     environment:
       DB_HOST: postgres
@@ -428,7 +428,7 @@ services:
   # BACKEND - Metrics Collector (pulls metrics from configured sources)
   # ============================================================================
   metrics-collector:
-    image: pulsimo/pulsimo_be_metrics_collector:${METRICS_COLLECTOR_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.2}}
+    image: pulsimo/pulsimo_be_metrics_collector:${METRICS_COLLECTOR_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
     container_name: pulsimo-metrics-collector
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -488,7 +488,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.1}}
+    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.2}}
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js

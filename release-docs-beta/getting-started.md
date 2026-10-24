@@ -9,8 +9,10 @@ to it. Pulsimo must already be running; if not, start with
 
 ## 1. Sign in
 
-Open `http://<HOST_IP>:3000`, click **Register** and create your organization and the
-first administrator. Every later account is added by an administrator from **Users**.
+Open `http://<HOST_IP>:3000` and sign in as `superadmin@pulsimo.io` with the password
+`admin`, then change that password (**Users** → your row → **Change password**). Self
+sign-up is turned off in this release: every later account is added by an administrator
+from **Users**.
 
 ## 2. Add an alert channel
 

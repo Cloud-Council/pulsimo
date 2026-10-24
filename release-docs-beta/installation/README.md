@@ -97,8 +97,9 @@ When it finishes, open `http://<server-ip>:3000` and continue with
 ## First sign-in
 
 1. Open `http://<HOST_IP>:3000`.
-2. Click **Register** and create your organization. The first account is its
-   administrator.
+2. Sign in as `superadmin@pulsimo.io` with the password `admin` (created by the first
+   migration), and change that password at once: **Users** → your row → **Change password**.
+   Self sign-up is turned off in this release.
 3. Add someone else as an administrator too (Users → Add user), so you are never locked
    out of user management. See [Users and access](../features/users.md).
 

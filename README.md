@@ -78,9 +78,8 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-The script detects the server's address, writes `.env` with a generated database password
-and JWT secret, pulls the images and starts everything. Before you press Enter to deploy,
-set `METRICS_SECRET_KEY` in `.env` to the output of `openssl rand -base64 32`.
+The script detects the server's address, writes `.env` with a generated database password,
+JWT secret and metrics key, pulls the images and starts everything.
 
 Prefer to do it by hand?
 
@@ -91,8 +90,9 @@ docker compose -f docker-compose.yml pull
 docker compose -f docker-compose.yml up -d
 ```
 
-Then open `http://<HOST_IP>:3000`, click **Register** and create your organization. The
-first account is its administrator. The [Installation guide](release-docs-beta/installation/README.md)
+Then open `http://<HOST_IP>:3000` and sign in as `superadmin@pulsimo.io` with the password
+`admin`. Change that password straight away (**Users** → your row → **Change password**).
+Self sign-up is turned off in this release; add your team from **Users**. The [Installation guide](release-docs-beta/installation/README.md)
 covers every step, and the [Quick start](release-docs-beta/getting-started.md) takes you to
 your first endpoint and alert channel.
 
@@ -105,8 +105,10 @@ your first endpoint and alert channel.
 | `setup.sh` | Guided install: checks Docker, writes `.env`, starts everything |
 | `release-docs-beta/` | The documentation |
 
-All images share one version tag, `PULSIMO_VERSION` (default `v1-rc2beta`). To upgrade, set
-the new version in `.env` and run `pull` and `up -d` again; database migrations run on start.
+Each image has its own version tag, set as the default in `docker-compose.yml` (for example
+`pulsimo/pulsimo_be_api_gateway:rc1beta-v0.1.9`). To upgrade, pull the new
+`docker-compose.yml` and run `pull` and `up -d` again; database migrations run on start. To
+pin or roll back one image, set its variable in `.env`, e.g. `API_GATEWAY_VERSION=rc1beta-v0.1.8`.
 
 ## Documentation
 

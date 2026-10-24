@@ -59,8 +59,9 @@ changes, locks or *Sign everyone out*.
 
 ## Creating an organization
 
-`POST /api/v1/auth/register` creates an organization and its first administrator. It is
-what the **Register** page calls:
+`POST /api/v1/auth/register` creates an organization and its first administrator. The
+**Register** page that called it is turned off in this release; the endpoint itself still
+answers:
 
 ```json
 {
