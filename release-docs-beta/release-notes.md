@@ -4,6 +4,21 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 24 Oct 2026 (themes)
+
+Image: frontend `rc1beta-v0.2.3`; every other image stays as below.
+
+### Colour themes
+
+Eleven themes, applied to the whole app (charts, the dependency graph and the PromQL editor
+included): Pulsimo Dark, Rosé Pine, Tokyo Night, Catppuccin Mocha, Nord and Dracula, and
+Pulsimo Light, Rosé Pine Dawn, Catppuccin Latte, Solarized Light and GitHub Light. Open the
+menu under your name: **Dark** switches to dark mode, and pressing **Dark** again moves to
+the next dark theme (**Light** works the same way). **System** follows your computer and
+keeps each series' choice. The choice is saved per browser and applies before the page
+shows, so there is no flash on reload. Body and muted text meet WCAG AA in every theme. The
+dependency graph's zoom buttons and minimap are now dark in dark mode.
+
 ## 24 Oct 2026
 
 Images: migrations `rc1beta-v0.1.6`, api-gateway `rc1beta-v0.1.9`, checker `rc1beta-v0.1.2`,
