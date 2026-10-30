@@ -10,7 +10,7 @@ to it. Pulsimo must already be running; if not, start with
 ## 1. Sign in
 
 Open `http://<HOST_IP>:3000` and sign in as `superadmin@pulsimo.io` with the password
-`admin`, then change that password (**Users** → your row → **Change password**). Self
+`admin`, then change that password (**Users** → **Reset password** on your own row). Self
 sign-up is turned off in this release: every later account is added by an administrator
 from **Users**.
 

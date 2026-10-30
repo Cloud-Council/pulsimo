@@ -91,7 +91,7 @@ docker compose -f docker-compose.yml up -d
 ```
 
 Then open `http://<HOST_IP>:3000` and sign in as `superadmin@pulsimo.io` with the password
-`admin`. Change that password straight away (**Users** → your row → **Change password**).
+`admin`. Change that password straight away (**Users** → **Reset password** on your own row).
 Self sign-up is turned off in this release; add your team from **Users**. The [Installation guide](release-docs-beta/installation/README.md)
 covers every step, and the [Quick start](release-docs-beta/getting-started.md) takes you to
 your first endpoint and alert channel.
