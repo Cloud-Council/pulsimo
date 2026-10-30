@@ -4,6 +4,66 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 30 Oct 2026
+
+Images: migrations `rc1beta-v0.1.7`, api-gateway `rc1beta-v0.1.10`, checker `rc1beta-v0.1.3`,
+notification `rc1beta-v0.0.5`, metrics-collector `rc1beta-v0.0.4`, frontend `rc1beta-v0.2.4`;
+dependency-tracker `rc1beta-v0.1.1` and maintenance `rc1beta-v0.0.4` are unchanged. Two new
+migrations (040, 041) run on start. New settings: `CHECK_CONNECT_TIMEOUT_SECONDS` (3) and
+`PLACEMENT_SCAN_SECONDS` (60), both optional.
+
+### Failures reported in about 15 seconds
+
+- Endpoints are checked every **10 seconds**. New and discovered endpoints start at 10 s, and
+  migration 040 moves every existing endpoint to 10 s. Raise the interval of endpoints that
+  don't need it on very large installations (10 s is three times the checks of 30 s).
+- After a failed check, up to four quick re-checks 2 seconds apart confirm the outage, instead
+  of waiting for the next interval.
+- A connection that doesn't open within **3 seconds** fails the check
+  (`CHECK_CONNECT_TIMEOUT_SECONDS`). The endpoint's own timeout still applies to slow answers.
+- Host unreachable fires after 30 s without metrics (was 120 s). Container stopped fires
+  15 s after a container drops out while the other containers on its host still report (was
+  120 s). Kubernetes node not ready fires after 30 s (was 2 min). These are judged every 5
+  seconds.
+- New built-in rule **Cluster unreachable**: a whole Kubernetes cluster stopped reporting for
+  45 s.
+
+### One alarm for one failure
+
+- When a VM, container, node or cluster fails, Pulsimo sends one alarm that names it and
+  lists the apps it took down ("Host vm-1 is not responding: 3 services down"), instead of one
+  alarm per app. When the machine still answers but two or more of its apps fail together, it
+  says so ("2 of 6 services on vm-1 are failing together").
+- The first alert is never delayed for grouping. An alarm that comes later takes over the
+  earlier ones and says so.
+- Recovery is one message, sent 30 seconds after the machine is back, naming anything still
+  failing. An app still failing 2 minutes later gets its own alert.
+- The grouped alarm goes to the infra channels and to every affected project's channels,
+  once each. Discord messages are edited in place as more apps join; other channels get at
+  most one impact update a minute.
+- A flapping endpoint that goes down sends one message, not "down" and "unstable".
+- **Runs on**: each endpoint's details show the host, container, pod or cluster it runs on,
+  found from its metrics, logs and Kubernetes. A match by URL is offered as a suggestion to
+  approve. Host, container and cluster pages list the **Apps running here**.
+- Maintenance windows can cover hosts and clusters.
+- Turn grouping off in **Settings → Alarm grouping**.
+
+Measured on a test VM with three apps (messages per channel):
+
+| What happened | Before | Now |
+|---|---|---|
+| App returns errors | 22 s | 6 s, 1 message |
+| Container stopped | container alarm never fired | app 14 s, container 16 s |
+| Whole VM freezes | 33–156 s, 10 messages | 15–17 s, 1 message |
+| VM comes back | one message per alarm | 1 message |
+
+### Overview
+
+While something is down, an incident is open or a critical alarm fires, the top of the
+Overview shows the incident: "Incident in progress · started 17m ago", a red **View open
+incidents** button and **View firing alarms**. The create buttons wait in the **⋯** menu until
+everything is healthy again.
+
 ## 24 Oct 2026 (themes)
 
 Image: frontend `rc1beta-v0.2.3`; every other image stays as below.

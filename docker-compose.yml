@@ -11,7 +11,7 @@
 #
 # Image tags: each Pulsimo image has its own default tag below (the release that
 # was built for it). To change one, set its variable in .env, e.g.
-# API_GATEWAY_VERSION=rc1beta-v0.1.9. PULSIMO_VERSION, when set, puts every image
+# API_GATEWAY_VERSION=rc1beta-v0.1.10. PULSIMO_VERSION, when set, puts every image
 # on that one tag (what ./build-and-push.sh <version> produces); leave it unset
 # to use the per-image tags.
 #
@@ -85,7 +85,7 @@ services:
   # image, so release them with ./build-and-push.sh <version> and set
   # PULSIMO_VERSION to that version.
   migrations:
-    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.6}}
+    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.7}}
     container_name: pulsimo-migrations
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitoring}:${POSTGRES_PASSWORD:-monitoring_password}@postgres:5432/${POSTGRES_DB:-monitoring_system}
@@ -101,7 +101,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.9}}
+    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.10}}
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -175,7 +175,7 @@ services:
   # BACKEND - Health Checker Service
   # ============================================================================
   checker:
-    image: pulsimo/pulsimo_be_checker:${CHECKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.2}}
+    image: pulsimo/pulsimo_be_checker:${CHECKER_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.3}}
     container_name: pulsimo-checker
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -184,6 +184,7 @@ services:
       # A failure this soon after recovery reopens the last incident instead of opening a new one
       INCIDENT_REOPEN_MINUTES: ${INCIDENT_REOPEN_MINUTES:-10}
       MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-300}  # checks running at the same time; a slow endpoint holds one slot, never the others
+      CHECK_CONNECT_TIMEOUT_SECONDS: ${CHECK_CONNECT_TIMEOUT_SECONDS:-3}  # a host that does not answer fails within this, not the endpoint timeout
       HEALTH_PORT: ${CHECKER_HEALTH_PORT:-8081}
       RUST_LOG: ${CHECKER_LOG_LEVEL:-info}
       TZ: UTC  # match the database
@@ -210,7 +211,7 @@ services:
   # BACKEND - Notification Service
   # ============================================================================
   notification:
-    image: pulsimo/pulsimo_be_notifications:${NOTIFICATION_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.4}}
+    image: pulsimo/pulsimo_be_notifications:${NOTIFICATION_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.5}}
     container_name: pulsimo-notification
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -428,7 +429,7 @@ services:
   # BACKEND - Metrics Collector (pulls metrics from configured sources)
   # ============================================================================
   metrics-collector:
-    image: pulsimo/pulsimo_be_metrics_collector:${METRICS_COLLECTOR_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.3}}
+    image: pulsimo/pulsimo_be_metrics_collector:${METRICS_COLLECTOR_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.0.4}}
     container_name: pulsimo-metrics-collector
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://monitoring:monitoring_password@postgres:5432/monitoring_system}
@@ -440,6 +441,7 @@ services:
       LOG_PATTERN_MAX_LINES: ${LOG_PATTERN_MAX_LINES:-5000}
       DEPENDENCY_SCAN_MINUTES: ${DEPENDENCY_SCAN_MINUTES:-30}
       DISCOVERY_INTERVAL_SECONDS: ${DISCOVERY_INTERVAL_SECONDS:-300}
+      PLACEMENT_SCAN_SECONDS: ${PLACEMENT_SCAN_SECONDS:-60}  # how often endpoints are matched to the host, container or cluster they run on
       TARGET_RELOAD_INTERVAL_SECONDS: ${TARGET_RELOAD_INTERVAL_SECONDS:-30}
       LOG_INCIDENTS_ENABLED: ${LOG_INCIDENTS_ENABLED:-true}
       LOG_INCIDENT_LAG_SECONDS: ${LOG_INCIDENT_LAG_SECONDS:-20}
@@ -488,7 +490,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.3}}
+    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.4}}
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
