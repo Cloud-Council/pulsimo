@@ -20,7 +20,8 @@ All figures come from your organization's health checks and incidents.
 | **Target** | The uptime a project should reach, 99.5% unless you change it. It is set per project |
 | **Error budget** | The failed checks the target allows. A 99.5% target allows 0.5% of checks to fail. *60% budget left* means 40% of that allowance is used. Above 100%, the project is below its target |
 | **Trend** | The same figure for the period just before, e.g. the previous 30 days, shown as a change in percentage points (pp) |
-| **MTTA / MTTR** | Mean time to acknowledge and mean time to resolve, for incidents opened in the period |
+| **MTTA / MTTR** | Mean time to acknowledge and mean time to recover. MTTR is measured from the first failed health check to recovery, with overlapping endpoint outages merged into one project failure ([MTTR and MTBF](reliability/mttr-mtbf.md)) |
+| **MTBF** | Mean time between failures: up time divided by the number of failures. *No failures* when nothing failed |
 | **p95** | 95% of successful checks answered faster than this |
 | **Period** | The last 7, 30 or 90 days in UTC, including today |
 
@@ -75,7 +76,7 @@ Use it as the live status board. It refreshes every 30 seconds.
     with a down endpoint.
   - **Uptime**, compared with the previous period.
   - **Incidents**: in the period, open now, and in the period before.
-  - **Time to resolve**, and time to acknowledge.
+  - **MTTR / MTBF** for all projects, with how many failures and the time to acknowledge.
 - **Needs attention**: a line naming every project that is down or below its target.
   Click a name to open that project.
 - **Filters**: search; **All**, **Down**, **Degraded**, **Healthy** or **Below target**;
@@ -90,7 +91,7 @@ Each **project card** shows:
 - one bar per day, green when the day met the target. Hover a bar for that day's uptime
   and incidents;
 - endpoints up out of the total (with how many are down), incidents (with how many are
-  open), MTTR and p95;
+  open), MTTR, MTBF and p95;
 - the weakest endpoint, when one wasn't up the whole time.
 
 Click a card to open the project: edit it, see its endpoints, add one. On hover, a card
@@ -145,8 +146,9 @@ Link to a project's panel with `/dashboard/project-analytics?project=<project id
 
 | Method and path | Returns |
 |---|---|
-| `GET /api/v1/projects/insights?days=30` | Every project: health, endpoints by status, uptime, previous uptime, target, budget used, p95, incident figures (by severity, by source, MTTA, MTTR), one entry per day, weakest endpoints. Also totals and incidents per day by severity |
+| `GET /api/v1/projects/insights?days=30` | Every project: health, endpoints by status, uptime, previous uptime, target, budget used, p95, incident figures (by severity, by source, MTTA, MTTR), `reliability` (current and previous MTTR, MTBF, MTTD, MTTA, availability), one entry per day, weakest endpoints. Also totals and incidents per day by severity |
 | `GET /api/v1/projects/:id/insights?days=30` | The same for one project, plus its endpoints (with one value per day) and its recent incidents |
+| `GET /api/v1/projects/:id/reliability?days=30` | MTTR, MTBF and availability of one project with every endpoint's figures ([MTTR and MTBF](reliability/mttr-mtbf.md)) |
 | `PUT /api/v1/projects/:id/sla-target` | `{ "sla_target": 99.9 }` (members and administrators) |
 | `GET /api/v1/overview/status` | The status board: summary, every endpoint with 48 half-hour slots, and the recent changes |
 

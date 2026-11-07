@@ -35,7 +35,8 @@ Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](f
 - **Infrastructure.** Hosts and containers from node_exporter and cAdvisor, and Kubernetes
   clusters from kube-state-metrics, with alarms built in.
 - **Incidents and reliability.** Incidents carry the evidence and the impact, with ranked
-  probable causes. SLOs with error budgets and burn-rate alerts, deploy markers on every
+  probable causes, and a Metrics tab and timeline that show how each one was handled. MTTR and
+  MTBF per endpoint and project. SLOs with error budgets and burn-rate alerts, deploy markers on every
   chart, capacity forecasts and anomaly detection.
 - **Alerting.** Rules for checks, metrics, logs and traffic; delivery to Slack, Discord,
   Microsoft Teams, Google Chat, email and webhooks; routing, digests, deploy grace and
@@ -87,6 +88,7 @@ Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](f
 - [SLOs](features/reliability/slos.md): Error budgets, burn-rate alerts and real-user Apdex.
 - [Change markers](features/reliability/change-markers.md): Deploys, restarts and new routes drawn on every chart.
 - [Capacity and anomalies](features/reliability/capacity-and-anomalies.md): "Disk full in about 3 days" and "traffic 70% below last week".
+- [MTTR and MTBF](features/reliability/mttr-mtbf.md): How long failures take to fix and how long services stay up between them, per endpoint and project; how each incident was handled.
 
 ### Alerting
 

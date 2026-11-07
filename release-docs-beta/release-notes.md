@@ -4,6 +4,45 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 7 Nov 2026
+
+Images: migrations `rc1beta-v0.1.8`, api-gateway `rc1beta-v0.1.11`, maintenance
+`rc1beta-v0.0.5`, frontend `rc1beta-v0.2.5`; checker `rc1beta-v0.1.3`, notification
+`rc1beta-v0.0.5`, dependency-tracker `rc1beta-v0.1.1` and metrics-collector
+`rc1beta-v0.0.4` are unchanged. One new migration (042) runs on start and fills the
+reliability history from the incidents already kept. New setting:
+`RELIABILITY_RETENTION_DAYS` (400), optional.
+
+### MTTR and MTBF per endpoint and project
+
+- **MTTR** is measured from the first failed health check to recovery, so slow detection
+  counts. Median and p90 sit next to the mean, because one long outage moves the mean a lot.
+- **MTBF**: up time between failures. *No failures* when nothing failed.
+- A reopened incident is one failure, and the healthy gap before the reopen isn't downtime.
+  Outages inside a maintenance window aren't failures.
+- Projects merge overlapping endpoint outages, so one database outage that takes three APIs
+  down is one project failure.
+- Shown on the endpoint's **Reliability** card (7, 30, 90 days, with trend, failures per day
+  and outages), on every **Projects** card, and in **Project Analytics** (sortable MTTR and
+  MTBF columns, per-endpoint lines, CSV).
+- Reliability history is kept for 400 days, after the incidents themselves are deleted.
+
+### Incident page: Metrics and Timeline
+
+- **Metrics** shows how the incident was handled: detect, acknowledge and fix as one bar;
+  the acknowledge and recover targets of its priority (*Met*, *Missed by 4d 16h*, *2h left*,
+  *Never acknowledged*); detection against the check interval; and how it compares with the
+  endpoint's usual recovery (*604× longer than usual*, *its longest outage in 90 days*).
+  The gauges that showed *0%* and *0s / 300s target* are gone.
+- **Timeline** reads as a story: "First failed health check", "Incident opened",
+  "Acknowledged by …", "Recovered, health check passing again", each with its exact time
+  and offset from the start. "State changed from to open" and the duplicate *resolved*
+  entries are gone. **Post update** now works.
+- The top cards say *Never* instead of *Pending* on a resolved incident nobody
+  acknowledged, and show the real downtime. Long values no longer overflow the cards.
+
+See [MTTR and MTBF](features/reliability/mttr-mtbf.md).
+
 ## 30 Oct 2026
 
 Images: migrations `rc1beta-v0.1.7`, api-gateway `rc1beta-v0.1.10`, checker `rc1beta-v0.1.3`,

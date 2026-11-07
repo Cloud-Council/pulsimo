@@ -22,6 +22,7 @@ Every part of Pulsimo, by area. Each page says where to find the feature, how to
 - [SLOs](reliability/slos.md): Error budgets, burn-rate alerts and real-user Apdex.
 - [Change markers](reliability/change-markers.md): Deploys, restarts and new routes drawn on every chart.
 - [Capacity and anomalies](reliability/capacity-and-anomalies.md): "Disk full in about 3 days" and "traffic 70% below last week".
+- [MTTR and MTBF](reliability/mttr-mtbf.md): How long failures take to fix and how long services stay up between them, per endpoint and project; how each incident was handled.
 - [Alarms and rules](alarms.md): Rules for logs, traffic, metrics, incidents and checks; acknowledging, routing and maintenance windows.
 - [Channels and delivery](alerts.md): Slack, Discord, Teams, Google Chat, email and webhooks, with tests, a delivery log and muting.
 - [Routing, digests and deploy grace](alert-routing.md): The right channel, fewer pages during deploys, and one digest for the small stuff.

@@ -37,7 +37,10 @@ Every endpoint is under `/api/v1` on the API address (port 8080 by default) and 
 | `PUT /api/v1/incidents/:id` | Change it (title, severity, assignee…) |
 | `PUT /api/v1/incidents/:id/state` | Move it to another state |
 | `POST /api/v1/incidents/:id/acknowledge` | Acknowledge: reminders and escalation stop |
-| `GET /api/v1/incidents/:id/timeline` | Everything that happened, in order |
+| `GET /api/v1/incidents/:id/timeline` | Everything that happened, in order, with who made each change |
+| `GET /api/v1/incidents/:id/response` | How it was handled: detect, acknowledge, fix and down seconds, its targets, and the endpoint's last 90 days |
+| `GET /api/v1/endpoints/:id/reliability?days=30` | MTTR (mean, median, p90), MTBF, MTTD, MTTA and availability of one endpoint, per day, with its outages |
+| `GET /api/v1/projects/:id/reliability?days=30` | The same for a project, overlapping outages merged, with every endpoint's figures |
 | `POST /api/v1/incidents/:id/updates` | Add an update |
 | `GET /api/v1/incidents/:id/evidence` | Metrics, logs and changes saved with it |
 | `GET /api/v1/incidents/:id/post-mortem` | A post-mortem draft with impact and evidence |

@@ -184,6 +184,7 @@ values and when each job last ran.
 | `EVENT_TRAIL_RETENTION_DAYS` | `180` | Days of the event trail (who changed what) kept. |
 | `ALERT_HISTORY_RETENTION_DAYS` | `30` | Days of alert history kept. |
 | `INCIDENT_RETENTION_DAYS` | `90` | Resolved incidents older than this are deleted. Open incidents are never deleted. |
+| `RELIABILITY_RETENTION_DAYS` | `400` | Days of reliability history (MTTR / MTBF per endpoint and project) kept. It outlives incidents, so a year can be compared with the one before. At least 30. |
 | `NOTIFICATION_RETENTION_DAYS` | `60` | Delivered alerts (Alerting → Delivery log) older than this are deleted. |
 | `ALARM_RETENTION_DAYS` | `90` | Resolved alarms, with their timelines, older than this are deleted. Open alarms are never deleted. |
 | `API_METRICS_RETENTION_DAYS` | `30` | Requests to Pulsimo's own API (Pulsimo → API metrics) older than this are deleted. |

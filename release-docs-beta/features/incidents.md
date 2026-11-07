@@ -56,6 +56,31 @@ database) failed together". The group shows a **Shared: host-1** badge, and the 
 source is treated as the likely cause. One page instead of six. Grouping by dependencies
 and timing still works as before, and grouping never mixes organizations.
 
+## How the incident was handled (Metrics tab)
+
+The **Metrics** tab shows the response, measured from the first failed health check:
+
+- one bar for **Detect** (first failed check to incident opened), **Acknowledge** and
+  **Fix**, or **Nobody acknowledged** when no one took it;
+- the **Acknowledge** and **Recover** targets of its priority: *Met*, *Missed by 4d 16h*,
+  *2h left* while it is open, or *Never acknowledged*;
+- how fast it was detected, against the endpoint's check interval;
+- the endpoint's last 90 days: usual (median) recovery, *604× longer than usual*,
+  *its longest outage*, the previous failure, MTBF, availability and the last outages.
+
+The top cards use the same figures: *Time to acknowledge* (*Never* when nobody took it)
+and the real *Total downtime* (the healthy gap of a reopen isn't counted).
+
+## Timeline
+
+The **Timeline** tells the incident's story, oldest first: first failed check, opened,
+acknowledged by whom, investigating, recovered or resolved by whom, reopened, and every
+update, each with its exact time and how long after the start. **Post update** adds a note,
+internal or shown on the status page. Duplicate entries the system wrote for the same state
+change are shown once.
+
+See [MTTR and MTBF](reliability/mttr-mtbf.md) for how the figures are calculated.
+
 ## Post-mortems
 
 **Generate post-mortem** now adds:

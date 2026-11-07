@@ -44,6 +44,7 @@
 * [SLOs](features/reliability/slos.md)
 * [Change markers](features/reliability/change-markers.md)
 * [Capacity and anomalies](features/reliability/capacity-and-anomalies.md)
+* [MTTR and MTBF](features/reliability/mttr-mtbf.md)
 
 ## Alerting
 
