@@ -4,6 +4,56 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 7 Nov 2026: single sign-on and outage forecast
+
+Images: migrations `rc1beta-v0.1.9`, api-gateway `rc1beta-v0.1.12`, frontend
+`rc1beta-v0.2.6`; checker `rc1beta-v0.1.3`, notification `rc1beta-v0.0.5`,
+dependency-tracker `rc1beta-v0.1.1`, maintenance `rc1beta-v0.0.5` and metrics-collector
+`rc1beta-v0.0.4` are unchanged. One new migration (043) runs on start: it adds
+`user_identities` (linked SSO accounts), `users.auth_source` and `forecast_mutes`.
+
+**Upgrade:** pull and `docker compose up -d`. The migration applies automatically. Single
+sign-on stays off until you configure it; the new `SSO_*` settings are all optional.
+
+### Single sign-on (OpenID Connect)
+
+- Sign in with Okta, Microsoft Entra ID, Google Workspace, Keycloak, Authentik, Auth0 or
+  any other OpenID Connect provider. The login page shows the button when
+  `SSO_ENABLED=true`, with your text from `SSO_LABEL` (e.g. *Log in with Okta*).
+- Safe by design: PKCE (S256), a one-time state and a nonce on every sign-in, and the ID
+  token's signature, issuer, audience and expiry are checked against the provider's keys.
+  Tokens never appear in a URL.
+- **Accounts on first sign-in** (`SSO_JIT_PROVISIONING`, on by default). Existing accounts
+  are linked by email the first time the person uses SSO.
+- **Roles from groups** (`SSO_ADMIN_GROUPS`, `SSO_MEMBER_GROUPS`, `SSO_VIEWER_GROUPS`,
+  `SSO_DEFAULT_ROLE`), applied again at every sign-in.
+- **Allowed domains** (`SSO_ALLOWED_DOMAINS`) limit who may sign in.
+- **Enforce mode** (`SSO_ENFORCE=true`) turns off password login for everyone except the
+  break-glass emails (`SSO_BREAK_GLASS_EMAILS`), who use "Use a password instead".
+- **Settings → Security → Single sign-on** shows administrators how it is set up, with
+  **Test connection**.
+- Refused SSO sign-ins (wrong domain, unknown user, deactivated account…) are recorded in
+  the login attempts with the reason; every SSO sign-in is in the event trail.
+
+See [Single sign-on (SSO)](features/single-sign-on.md).
+
+### Outage forecast
+
+- **Respond → Forecast** shows what is likely to break and when, from data Pulsimo already
+  has: nothing to configure.
+- A weather banner (*Storm warning*, *Rain this week*, *Mostly clear*, *Clear skies*), a
+  timeline of everything due, and one card per forecast with its chart, the reason, a
+  confidence and a hint on what to check.
+- Six kinds: disks, memory or connections running out (capacity), certificates expiring,
+  SLO error budgets running out, endpoints getting slower, recurring failures at the same
+  time of day, and endpoints failing more often.
+- Mute a forecast for 1, 7 or 30 days when you know about it, and unmute it later.
+- The nav badge counts what is due within 7 days (red within 24 hours), and the Overview
+  has a Forecast card under "Needs attention".
+- API: `GET /api/v1/forecast`, `POST /api/v1/forecast/mute`, `POST /api/v1/forecast/unmute`.
+
+See [Outage forecast](features/reliability/outage-forecast.md).
+
 ## 7 Nov 2026
 
 Images: migrations `rc1beta-v0.1.8`, api-gateway `rc1beta-v0.1.11`, maintenance

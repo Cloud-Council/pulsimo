@@ -67,7 +67,9 @@ Yes. Everything in the web app is available through the REST API. Create an API 
 
 ## Is there single sign-on or two-factor sign-in?
 
-Not yet. Sign-in security today is inactivity sign-out, account locks after failed
+Single sign-on, yes: OpenID Connect with Okta, Entra ID, Google, Keycloak and others, set in
+`.env`. See [Single sign-on (SSO)](features/single-sign-on.md). Two-factor sign-in is not
+available yet. Other sign-in security is inactivity sign-out, account locks after failed
 attempts, and password rules, all on **Settings → Security**.
 
 ## How do I report a bug or ask for a feature?

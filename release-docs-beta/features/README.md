@@ -23,11 +23,13 @@ Every part of Pulsimo, by area. Each page says where to find the feature, how to
 - [Change markers](reliability/change-markers.md): Deploys, restarts and new routes drawn on every chart.
 - [Capacity and anomalies](reliability/capacity-and-anomalies.md): "Disk full in about 3 days" and "traffic 70% below last week".
 - [MTTR and MTBF](reliability/mttr-mtbf.md): How long failures take to fix and how long services stay up between them, per endpoint and project; how each incident was handled.
+- [Outage forecast](reliability/outage-forecast.md): What is likely to break and when: disks filling, certificates expiring, error budgets running out, endpoints getting slower, recurring and more frequent failures.
 - [Alarms and rules](alarms.md): Rules for logs, traffic, metrics, incidents and checks; acknowledging, routing and maintenance windows.
 - [Channels and delivery](alerts.md): Slack, Discord, Teams, Google Chat, email and webhooks, with tests, a delivery log and muting.
 - [Routing, digests and deploy grace](alert-routing.md): The right channel, fewer pages during deploys, and one digest for the small stuff.
 - [Users and access](users.md): Roles, who needs attention, safe administration, and access that changes at once.
 - [Settings and API keys](settings.md): Organization, sign-in security, API keys, integrations and configuration backup.
+- [Single sign-on (SSO)](single-sign-on.md): Sign in with Okta, Entra ID, Google, Keycloak and other OpenID Connect providers; accounts on first sign-in, roles from groups, enforce mode.
 - [API metrics and Event trail](observability/api-metrics.md): How Pulsimo's API answers per route, and who did what, with filters and export.
 - [System and database health](observability/system-health.md): Every Pulsimo component probed with real uptime; storage, retention and maintenance jobs.
 - [Monitoring pipeline](observability/pipeline-health.md): Check lag, scrape success, alert delay and series per source.

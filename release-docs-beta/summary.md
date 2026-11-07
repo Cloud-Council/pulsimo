@@ -45,6 +45,7 @@
 * [Change markers](features/reliability/change-markers.md)
 * [Capacity and anomalies](features/reliability/capacity-and-anomalies.md)
 * [MTTR and MTBF](features/reliability/mttr-mtbf.md)
+* [Outage forecast](features/reliability/outage-forecast.md)
 
 ## Alerting
 
@@ -56,6 +57,7 @@
 
 * [Users and access](features/users.md)
 * [Settings and API keys](features/settings.md)
+* [Single sign-on (SSO)](features/single-sign-on.md)
 * [API metrics and Event trail](features/observability/api-metrics.md)
 
 ## Pulsimo's own health

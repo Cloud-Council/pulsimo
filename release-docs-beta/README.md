@@ -37,11 +37,12 @@ Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](f
 - **Incidents and reliability.** Incidents carry the evidence and the impact, with ranked
   probable causes, and a Metrics tab and timeline that show how each one was handled. MTTR and
   MTBF per endpoint and project. SLOs with error budgets and burn-rate alerts, deploy markers on every
-  chart, capacity forecasts and anomaly detection.
+  chart, capacity forecasts and anomaly detection, and an outage forecast of what is likely
+  to break next.
 - **Alerting.** Rules for checks, metrics, logs and traffic; delivery to Slack, Discord,
   Microsoft Teams, Google Chat, email and webhooks; routing, digests, deploy grace and
   maintenance windows.
-- **Administration.** Roles, API keys, an event trail of who did what, and pages that show
+- **Administration.** Single sign-on (OpenID Connect), roles, API keys, an event trail of who did what, and pages that show
   Pulsimo's own health, storage and retention.
 
 ## Contents
@@ -89,6 +90,7 @@ Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](f
 - [Change markers](features/reliability/change-markers.md): Deploys, restarts and new routes drawn on every chart.
 - [Capacity and anomalies](features/reliability/capacity-and-anomalies.md): "Disk full in about 3 days" and "traffic 70% below last week".
 - [MTTR and MTBF](features/reliability/mttr-mtbf.md): How long failures take to fix and how long services stay up between them, per endpoint and project; how each incident was handled.
+- [Outage forecast](features/reliability/outage-forecast.md): What is likely to break and when: disks filling, certificates expiring, error budgets running out, endpoints getting slower, recurring and more frequent failures.
 
 ### Alerting
 
@@ -100,6 +102,7 @@ Something not working? See [Troubleshooting](troubleshooting.md) and the [FAQ](f
 
 - [Users and access](features/users.md): Roles, who needs attention, safe administration, and access that changes at once.
 - [Settings and API keys](features/settings.md): Organization, sign-in security, API keys, integrations and configuration backup.
+- [Single sign-on (SSO)](features/single-sign-on.md): Sign in with Okta, Entra ID, Google, Keycloak and other OpenID Connect providers; accounts on first sign-in, roles from groups, enforce mode.
 - [API metrics and Event trail](features/observability/api-metrics.md): How Pulsimo's API answers per route, and who did what, with filters and export.
 
 ### Pulsimo's own health

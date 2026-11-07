@@ -85,7 +85,7 @@ services:
   # image, so release them with ./build-and-push.sh <version> and set
   # PULSIMO_VERSION to that version.
   migrations:
-    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.8}}
+    image: pulsimo/pulsimo_migrations:${MIGRATIONS_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.9}}
     container_name: pulsimo-migrations
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitoring}:${POSTGRES_PASSWORD:-monitoring_password}@postgres:5432/${POSTGRES_DB:-monitoring_system}
@@ -101,7 +101,7 @@ services:
   # BACKEND - API Gateway
   # ============================================================================
   api-gateway:
-    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.11}}
+    image: pulsimo/pulsimo_be_api_gateway:${API_GATEWAY_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.1.12}}
     container_name: pulsimo-api-gateway
     environment:
       HOST: ${API_HOST:-0.0.0.0}
@@ -132,6 +132,29 @@ services:
       SYSTEM_HEALTH_TIMEOUT_SECONDS: ${SYSTEM_HEALTH_TIMEOUT_SECONDS:-5}
       SYSTEM_HEALTH_SLOW_MS: ${SYSTEM_HEALTH_SLOW_MS:-1000}
       SYSTEM_HEALTH_SKIP: ${SYSTEM_HEALTH_SKIP:-}
+      # Single sign-on (OpenID Connect). Off until SSO_OIDC_ISSUER and SSO_OIDC_CLIENT_ID are set.
+      # See release-docs-beta/features/single-sign-on.md
+      SSO_OIDC_ISSUER: ${SSO_OIDC_ISSUER:-}
+      SSO_OIDC_CLIENT_ID: ${SSO_OIDC_CLIENT_ID:-}
+      SSO_OIDC_CLIENT_SECRET: ${SSO_OIDC_CLIENT_SECRET:-}
+      SSO_OIDC_SCOPES: ${SSO_OIDC_SCOPES:-openid email profile}
+      SSO_OIDC_REDIRECT_URI: ${SSO_OIDC_REDIRECT_URI:-}
+      SSO_OIDC_TOKEN_AUTH: ${SSO_OIDC_TOKEN_AUTH:-}
+      SSO_PUBLIC_API_URL: ${SSO_PUBLIC_API_URL:-${NEXT_PUBLIC_API_URL:-http://${HOST_IP:-localhost}:${EXPOSE_API_PORT:-8080}}}
+      SSO_FRONTEND_URL: ${SSO_FRONTEND_URL:-${PULSIMO_PUBLIC_URL:-http://${HOST_IP:-localhost}:${EXPOSE_FRONTEND_PORT:-3000}}}
+      SSO_PROVIDER_NAME: ${SSO_PROVIDER_NAME:-}
+      SSO_ALLOWED_DOMAINS: ${SSO_ALLOWED_DOMAINS:-}
+      SSO_ORG_SLUG: ${SSO_ORG_SLUG:-}
+      SSO_ROLE_CLAIM: ${SSO_ROLE_CLAIM:-groups}
+      SSO_ADMIN_GROUPS: ${SSO_ADMIN_GROUPS:-}
+      SSO_MEMBER_GROUPS: ${SSO_MEMBER_GROUPS:-}
+      SSO_VIEWER_GROUPS: ${SSO_VIEWER_GROUPS:-}
+      SSO_DEFAULT_ROLE: ${SSO_DEFAULT_ROLE:-viewer}
+      SSO_JIT_PROVISIONING: ${SSO_JIT_PROVISIONING:-true}
+      SSO_ENFORCE: ${SSO_ENFORCE:-false}
+      SSO_BREAK_GLASS_EMAILS: ${SSO_BREAK_GLASS_EMAILS:-}
+      SSO_REQUIRE_VERIFIED_EMAIL: ${SSO_REQUIRE_VERIFIED_EMAIL:-true}
+      SSO_ALLOW_INSECURE_HTTP: ${SSO_ALLOW_INSECURE_HTTP:-false}
       # Shown on System Health (the services that use them have the same values)
       MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-300}
       HEALTH_RETENTION_DAYS: ${HEALTH_RETENTION_DAYS:-90}
@@ -492,7 +515,7 @@ services:
   # FRONTEND - Next.js Application
   # ============================================================================
   frontend:
-    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.5}}
+    image: pulsimo/pulsimo_frontend:${FRONTEND_VERSION:-${PULSIMO_VERSION:-rc1beta-v0.2.6}}
     container_name: pulsimo-frontend
     environment:
       # Runtime environment variables for Next.js
@@ -503,6 +526,11 @@ services:
       API_PORT: ${EXPOSE_API_PORT:-8080}
       # Version text shown in the web app
       APP_VERSION: ${APP_VERSION:-v1beta1}
+      # Single sign-on button on the login page (off unless SSO_ENABLED=true).
+      # Empty SSO_LOGIN_URL = Pulsimo's own SSO (the api-gateway SSO_OIDC_* settings)
+      SSO_ENABLED: ${SSO_ENABLED:-false}
+      SSO_LABEL: ${SSO_LABEL:-Log in with SSO}
+      SSO_LOGIN_URL: ${SSO_LOGIN_URL:-}
     ports:
       - "${EXPOSE_FRONTEND_PORT:-3000}:3000"
     depends_on:

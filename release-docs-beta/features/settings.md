@@ -60,7 +60,9 @@ After an inactivity sign-out, the sign-in page says why.
 The same rules are checked whenever a password is set (adding a user, a reset, or someone
 changing their own). The forms show them as a checklist while you type.
 
-Two-factor sign-in and single sign-on (SSO) are not available yet.
+Single sign-on (OpenID Connect: Okta, Entra ID, Google, Keycloak…) is available. It is set in
+`.env`, see [Single sign-on (SSO)](single-sign-on.md); **Settings → Security → Single sign-on** shows its status to
+administrators, with **Test connection**. Two-factor sign-in is not available yet.
 
 ## API keys
 

@@ -74,6 +74,32 @@ Every endpoint is under `/api/v1` on the API address (port 8080 by default) and 
 
 More in [Projects and overview](../features/projects.md).
 
+## Single sign-on
+
+| Method and path | Does |
+|---|---|
+| `GET /api/v1/auth/sso/config` | Public. What the login page needs: `{ "enabled", "provider", "start_url", "enforce" }` |
+| `GET /api/v1/auth/sso/start?redirect=/dashboard` | Public. Redirects the browser to the identity provider (`redirect` is a path inside Pulsimo) |
+| `GET /api/v1/auth/sso/callback` | Public. The provider returns here; Pulsimo redirects to `<frontend>/login/sso?code=…`, or to `<frontend>/login?sso_error=…` with a plain message |
+| `POST /api/v1/auth/sso/exchange` | Public. `{ "code": "…" }`, one-time, valid 60 s. Same answer as `POST /api/v1/auth/login`, plus `next` (the path to open) |
+| `GET /api/v1/settings/sso?test=true` | Administrators. How SSO is set up (never the secret): provider, issuer, callback URL, domains, role mapping, enforce mode, linked and SSO-only users; `test=true` reloads the provider's metadata and keys now |
+
+More in [Single sign-on (SSO)](../features/single-sign-on.md).
+
+## Outage forecast
+
+| Method and path | Does |
+|---|---|
+| `GET /api/v1/forecast?days=30&project_id=&endpoint_id=&fresh=true` | `days` 1 to 90 (default 30). Returns `generated_at`, `summary` (`next_24h`, `next_7d`, `total`, `by_kind`), `items`, `muted`, `unavailable` |
+| `POST /api/v1/forecast/mute` | `{ "key": "latency:<id>", "days": 7, "reason": "…" }`. Mute for 1 to 90 days. Not for viewers |
+| `POST /api/v1/forecast/unmute` | `{ "key": "…" }`. Remove a mute |
+
+Each item has `key`, `kind`, `severity` (critical, high, medium, low), `title`, `detail`,
+`hint`, `eta`, `confidence`, `subject` (endpoint or source, with project), `link`, `chart`
+(`points` as `[unix ms, value]`, `limit`, `unit`) and `muted_until`.
+
+More in [Outage forecast](../features/reliability/outage-forecast.md).
+
 ## Change markers
 
 `GET /api/v1/changes?from=<unix>&to=<unix>[&source_id=…][&endpoint_id=…]`

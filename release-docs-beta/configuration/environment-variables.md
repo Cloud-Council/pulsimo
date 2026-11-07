@@ -67,6 +67,9 @@ logs after a change.
 The web app reads its addresses when its container starts, so changing them needs only
 `docker compose up -d frontend`, not a rebuild.
 
+The single sign-on button (`SSO_ENABLED`, `SSO_LABEL`, `SSO_LOGIN_URL`) is in
+[section 13](#13-single-sign-on-api-gateway-and-frontend).
+
 ## 2. Secrets
 
 Change all three before anyone else can reach the server.
@@ -225,6 +228,50 @@ Only change these if you rename services or run one of them outside this Compose
 | `VMALERT_URL` | `http://vmalert:8880` | api-gateway, metrics-collector |
 | `FRONTEND_INTERNAL_URL` | `http://frontend:3000` | api-gateway (System Health) |
 | `CHECKER_HEALTH_PORT`, `NOTIFICATION_HEALTH_PORT`, `DEPENDENCY_TRACKER_PORT`, `MAINTENANCE_PORT` | `8081`, `8082`, `8083`, `3007` | the service's own health/API port |
+
+## 13. Single sign-on (api-gateway and frontend)
+
+Sign in with your identity provider (Okta, Entra ID, Google, Keycloak, Authentik, Auth0…)
+over OpenID Connect. Off until `SSO_OIDC_ISSUER` and `SSO_OIDC_CLIENT_ID` are set. The full
+set-up, provider recipes and how it works are in
+[Single sign-on (SSO)](../features/single-sign-on.md). Apply changes with:
+
+```bash
+docker compose up -d api-gateway frontend
+```
+
+The frontend values are read when its container starts (no rebuild); the api-gateway values
+when it starts, and its log says `Single sign-on: on (…)` or why it stays off.
+
+| Variable | Default | Service | What it does |
+|---|---|---|---|
+| `SSO_ENABLED` | `false` | frontend | Shows the SSO button on the login page (`true`, `1`, `yes` or `on`). |
+| `SSO_LABEL` | `Log in with SSO` | frontend | Text on the button, e.g. `Log in with Okta`. Quotes are dropped. |
+| `SSO_LOGIN_URL` | empty | frontend | Send the button somewhere else. Empty = Pulsimo's own SSO (recommended). |
+| `SSO_OIDC_ISSUER` | empty | api-gateway | The provider's issuer URL. SSO is off while it is empty. Must be `https://` unless `SSO_ALLOW_INSECURE_HTTP=true`. |
+| `SSO_OIDC_CLIENT_ID` | empty | api-gateway | The client (application) ID. Required. |
+| `SSO_OIDC_CLIENT_SECRET` | empty | api-gateway | The client secret. Empty for a public client (PKCE is always used). |
+| `SSO_OIDC_SCOPES` | `openid email profile` | api-gateway | Scopes asked for. `openid` is always added. |
+| `SSO_OIDC_REDIRECT_URI` | `<SSO_PUBLIC_API_URL>/api/v1/auth/sso/callback` | api-gateway | Set only if a proxy rewrites paths. |
+| `SSO_OIDC_TOKEN_AUTH` | from the provider | api-gateway | `basic` or `post`: how the secret is sent to the token endpoint. |
+| `SSO_PUBLIC_API_URL` | `NEXT_PUBLIC_API_URL`, then `http://HOST_IP:EXPOSE_API_PORT` | api-gateway | The API address the browser uses; the callback URL is built from it. |
+| `SSO_FRONTEND_URL` | `PULSIMO_PUBLIC_URL`, then `http://HOST_IP:EXPOSE_FRONTEND_PORT` | api-gateway | Where people are sent after signing in. |
+| `SSO_PROVIDER_NAME` | the issuer's host name | api-gateway | Name used in messages ("Your organization signs in with Okta"). |
+| `SSO_ALLOWED_DOMAINS` | empty (any) | api-gateway | Comma-separated email domains allowed to sign in. |
+| `SSO_ORG_SLUG` | empty | api-gateway | Organization new SSO users join. Empty = the organization whose users share the email domain, or the only organization. |
+| `SSO_ROLE_CLAIM` | `groups` | api-gateway | ID token claim with the groups. A dotted path works, e.g. `realm_access.roles`. |
+| `SSO_ADMIN_GROUPS` | empty | api-gateway | Groups that make someone an admin. |
+| `SSO_MEMBER_GROUPS` | empty | api-gateway | Groups that make someone a member. |
+| `SSO_VIEWER_GROUPS` | empty | api-gateway | Groups that make someone a viewer. |
+| `SSO_DEFAULT_ROLE` | `viewer` | api-gateway | Role for people in none of the groups. |
+| `SSO_JIT_PROVISIONING` | `true` | api-gateway | Create an account at first sign-in. `false` = only people who already have an account. |
+| `SSO_ENFORCE` | `false` | api-gateway | Turn off password login except for the break-glass emails. |
+| `SSO_BREAK_GLASS_EMAILS` | empty | api-gateway | Accounts that can always use a password; their role is never changed by groups. Keep at least one when enforcing. |
+| `SSO_REQUIRE_VERIFIED_EMAIL` | `true` | api-gateway | Refuse ID tokens whose `email_verified` is false. |
+| `SSO_ALLOW_INSECURE_HTTP` | `false` | api-gateway | Allow an `http://` issuer. Only for a local test provider. |
+
+The [outage forecast](../features/reliability/outage-forecast.md) has no settings: it works
+from data Pulsimo already records.
 
 ## Controlled in the app, not in `.env`
 
