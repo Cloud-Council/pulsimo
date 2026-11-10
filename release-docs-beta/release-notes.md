@@ -4,6 +4,26 @@
 
 Pulsimo is in beta and changes often. These notes come from each feature page and list what was fixed or added, newest first.
 
+## 10 Nov 2026: Kubernetes fixes
+
+Images: api-gateway `rc1beta-v0.1.13`, frontend `rc1beta-v0.2.7`; migrations
+`rc1beta-v0.1.9` and every other image are unchanged. No new migration or setting.
+
+**Upgrade:** pull and `docker compose up -d`.
+
+- **Honest cluster totals.** kind, k3d and minikube run every node as a container on one
+  machine, and each node reports the whole machine, so a 3-node kind cluster on a 16-core PC
+  showed "of 48 cores". Nodes that share one machine (same kernel boot time and the same
+  allocatable CPU and memory) are now counted once, and a line under the cards says which.
+  Clusters whose nodes are separate machines are added up as before.
+- The **Nodes** tab marks nodes that share a machine: *same machine as …*.
+- **Tables stay inside their cards**: Namespaces, a workload's Pods, and the Workloads, Pods,
+  Nodes, Hosts and Containers lists no longer stick out past the card or page edge; on narrow
+  screens they scroll sideways inside the card.
+- **Connecting a local kind cluster**: the manifest's `localhost` address can't be reached
+  from pods. Use the kind network's gateway (e.g. `10.240.3.1`) instead. See
+  [Kubernetes](features/infrastructure/kubernetes.md).
+
 ## 7 Nov 2026: single sign-on and outage forecast
 
 Images: migrations `rc1beta-v0.1.9`, api-gateway `rc1beta-v0.1.12`, frontend

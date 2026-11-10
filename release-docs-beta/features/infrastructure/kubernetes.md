@@ -53,8 +53,20 @@ What the manifest creates, all in a `pulsimo` namespace:
 | `pulsimo-agent` ServiceAccount, ClusterRole and binding | Read-only access to nodes, pods, services, endpoints, namespaces, workloads and jobs | |
 
 Nothing is exposed outside the cluster; everything is pushed to Pulsimo. The address it
-pushes to is `LOG_INGEST_PUBLIC_URL` ([Configuration](../../configuration/environment-variables.md)); when that is `localhost`, the screen
-warns that pods can't reach it.
+pushes to is `LOG_INGEST_PUBLIC_URL` ([Configuration](../../configuration/environment-variables.md)), else the address your browser
+uses; when that is `localhost`, the screen warns that pods can't reach it (inside a pod,
+`localhost` is the pod itself).
+
+**A local test cluster (kind, k3d, minikube) on the Pulsimo machine**: its pods reach the
+machine through the gateway of the cluster's Docker network. For kind:
+
+```bash
+docker network inspect kind -f '{{range .IPAM.Config}}{{.Gateway}} {{end}}'   # e.g. 10.240.3.1
+```
+
+Replace `localhost` with that address in the manifest (vmagent's `-remoteWrite.url` and Fluent
+Bit's `Host`) before applying it, or set `LOG_INGEST_PUBLIC_URL=http://<gateway>:8080` while you
+only connect local clusters.
 
 Preparing the same cluster again keeps its sources with new tokens: apply the new manifest
 for the agent to keep sending.
@@ -99,6 +111,13 @@ Pick 1 hour, 6 hours, 24 hours or 7 days for the charts.
 **Cards**: nodes ready, pods running (and pending), pods failing, workloads degraded, CPU
 and memory used. Click one to go to its tab.
 
+CPU and memory are measured against the allocatable capacity of the nodes. When several nodes
+run on one machine (kind, k3d and minikube run each node as a container), every node reports
+the whole machine, so Pulsimo counts that machine once and says so under the cards. Nodes are
+on one machine when node_exporter reports the same kernel boot time on them and they have the
+same allocatable CPU and memory (without node_exporter: kind's `kind://` provider id). Nodes on
+separate machines are always added up. The **Nodes** tab marks shared ones *same machine as …*.
+
 **Overview**
 
 - **What needs a look**, worst first:
@@ -130,7 +149,7 @@ hour), CPU, memory against its limit, node and age. Filter by text, namespace, n
 Running / Pending / Failing.
 
 **Nodes**: ready or not, cordoned, pressure conditions, roles, CPU and memory used against
-allocatable, pods against the node's maximum, versions. A node with node_exporter opens its
+the node's own allocatable, pods against the node's maximum, versions. A node with node_exporter opens its
 host page.
 
 ## A workload
